@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://neondb_owner:npg_miqsVcgU9n2k@ep-late-violet-aognxuf5-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true"
+}
+
+model Settings {
+  id           Int    @id @default(1)
+  companyName  String @default("Simba Dume Cargo")
+  companyPhone String @default("0700 000 000")
+  companyTin   String @default("000-000-000")
+  address      String @default("Dar es Salaam, Tanzania")
+  terms        String @default("1. Risiti ni lazima.\n2. Mzigo siku 7 hifadhi faini.\n3. Vitu vya kuvunjika taarifa mapema.\n4. Hakikisha mzigo kabla ya kuondoka.")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("CLERK")
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Branch {
+  id          String     @id @default(uuid())
+  name        String
+  address     String?
+  phone       String?
+  users       User[]
+  sentCargo   Shipment[] @relation("OriginBranch")
+  recvCargo   Shipment[] @relation("DestBranch")
+  sentTrips   Trip[]     @relation("TripOrigin") // Safari zinazotoka hapa
+  recvTrips   Trip[]     @relation("TripDest")   // Safari zinazoingia hapa
+  createdAt   DateTime   @default(now())
+}
+
+// JEDWALI JIPYA LA SAFARI (TRIPS)
+model Trip {
+  id                  String   @id @default(uuid())
+  tripNumber          String   @unique
+  driverName          String
+  vehiclePlate        String
+  status              String   @default("SCHEDULED") // SCHEDULED, IN_TRANSIT, COMPLETED
+  originBranchId      String
+  originBranch        Branch   @relation("TripOrigin", fields: [originBranchId], references: [id])
+  destinationBranchId String
+  destBranch          Branch   @relation("TripDest", fields: [destinationBranchId], references: [id])
+  shipments           Shipment[] // Mizigo iliyopakiwa kwenye hii gari
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// JEDWALI LA MIZIGO (LIMEBORESHWA)
+model Shipment {
+  id                  String   @id @default(uuid())
+  trackingNumber      String   @unique
+  senderName          String
+  senderPhone         String
+  receiverName        String
+  receiverPhone       String
+  description         String
+  weight              Float?
+  declaredValue       Decimal?
+  price               Decimal
+  paymentStatus       String   @default("PENDING")
+  status              String   @default("RECEIVED")
+  originBranchId      String
+  originBranch        Branch   @relation("OriginBranch", fields: [originBranchId], references: [id])
+  destinationBranchId String
+  destBranch          Branch   @relation("DestBranch", fields: [destinationBranchId], references: [id])
+  
+  // HAPA: Tumeongeza uhusiano ili mzigo uweze kupakiwa kwenye Safari
+  tripId              String?
+  trip                Trip?    @relation(fields: [tripId], references: [id])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
