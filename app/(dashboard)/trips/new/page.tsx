@@ -1,8 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { Truck, User, MapPin, ArrowLeft, Save, Package } from 'lucide-react';
-import prisma from '../../../../lib/prisma';
-import { createTrip } from '../../../../app/actions/trip';
+
+// NJIA ZIMEREKEBISHWA KULINGANA NA ENEO HILI (Faili la nje) 👇🏾
+import prisma from '../../../lib/prisma';
+import { createTrip } from '../../actions/trip'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -55,10 +57,26 @@ export default async function NewTripPage() {
               <select name="originBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                 <option value="">-- Chagua Kituo --</option>
                 <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Kiteto">Kiteto</option>
-                <option value="Kilindi">Kilindi</option>
+                <option value="Mkata">Mkata</option>
+                <option value="Handeni">Handeni</option>
+                <option value="Mabalanga">Mabalanga</option>
+                <option value="Kwinji">Kwinji</option>
+                <option value="Kwediboma">Kwediboma</option>
+                <option value="Kibirashi">Kibirashi</option>
+                <option value="Mafisa">Mafisa</option>
                 <option value="Songe">Songe</option>
+                <option value="Lengatei">Lengatei</option>
+                <option value="Kijungu">Kijungu</option>
+                <option value="Pori namba 01">Pori namba 01</option>
+                <option value="Kibaya kiteto">Kibaya kiteto</option>
+                <option value="Njoro">Njoro</option>
                 <option value="Mrijo">Mrijo</option>
+                <option value="Mkoka">Mkoka</option>
+                <option value="Dosidosi">Dosidosi</option>
+                <option value="Ngusero">Ngusero</option>
+                <option value="Matui">Matui</option>
+                <option value="Gairo">Gairo</option>
+                <option value="Dumila">Dumila</option>
               </select>
             </div>
             <div>
@@ -66,10 +84,26 @@ export default async function NewTripPage() {
               <select name="destinationBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                 <option value="">-- Chagua Kituo --</option>
                 <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Kiteto">Kiteto</option>
-                <option value="Kilindi">Kilindi</option>
+                <option value="Mkata">Mkata</option>
+                <option value="Handeni">Handeni</option>
+                <option value="Mabalanga">Mabalanga</option>
+                <option value="Kwinji">Kwinji</option>
+                <option value="Kwediboma">Kwediboma</option>
+                <option value="Kibirashi">Kibirashi</option>
+                <option value="Mafisa">Mafisa</option>
                 <option value="Songe">Songe</option>
+                <option value="Lengatei">Lengatei</option>
+                <option value="Kijungu">Kijungu</option>
+                <option value="Pori namba 01">Pori namba 01</option>
+                <option value="Kibaya kiteto">Kibaya kiteto</option>
+                <option value="Njoro">Njoro</option>
                 <option value="Mrijo">Mrijo</option>
+                <option value="Mkoka">Mkoka</option>
+                <option value="Dosidosi">Dosidosi</option>
+                <option value="Ngusero">Ngusero</option>
+                <option value="Matui">Matui</option>
+                <option value="Gairo">Gairo</option>
+                <option value="Dumila">Dumila</option>
               </select>
             </div>
           </div>

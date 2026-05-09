@@ -1,110 +1,106 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
-  LayoutDashboard, Package, Truck, Users, Settings, LogOut, Menu, X, MapPin
+  LayoutDashboard, 
+  Package, 
+  Truck, 
+  Car, 
+  MapPin, 
+  Users, 
+  Settings,
+  LogOut 
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter(); // Tumeongeza router hapa kwa ajili ya kitufe cha kuondoka
 
+  // Nimeziweka Link (paths) ziendane sawa sawa na majina ya folders zako kwenye VS Code
   const menuItems = [
-    { name: 'Dashibodi', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-    { name: 'Mizigo Mpya', icon: <Package size={20} />, path: '/shipments/new' },
-    { name: 'Safari', icon: <Truck size={20} />, path: '/trips' },
-    { name: 'Vituo / Matawi', icon: <MapPin size={20} />, path: '/branches' },
-    // LINK YA WAFANYAKAZI IMEWEKWA HAPA IWE HAI
-    { name: 'Wafanyakazi', icon: <Users size={20} />, path: '/users' },
-    { name: 'Mipangilio', icon: <Settings size={20} />, path: '/settings' },
+    { name: 'Dashibodi', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Mizigo Mpya', path: '/shipments/new', icon: Package },
+    { name: 'Safari', path: '/trips', icon: Truck },
+    { name: 'Magari', path: '/vehicles', icon: Car },
+    { name: 'Vituo / Matawi', path: '/branches', icon: MapPin },
+    { name: 'Wafanyakazi', path: '/users', icon: Users },
+    { name: 'Mipangilio', path: '/settings', icon: Settings },
   ];
 
+  // Function maalum ya kufanya Logout
+  const handleLogout = () => {
+    // Hapa unaweza kuongeza logic ya kufuta token kama unatumia local storage
+    // localStorage.removeItem('token');
+    
+    // Inakupeleka kwenye ukurasa wa login
+    router.push('/login');
+    // Inafanya refresh kusafisha kumbukumbu yoyote ya nyuma
+    router.refresh(); 
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900">
+    <div className="flex h-screen overflow-hidden">
       
-      {/* SIDEBAR */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#0f0f0f] text-white transform transition-transform duration-300 ease-in-out
-        md:relative md:translate-x-0 flex flex-col flex-shrink-0
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {/* LOGO AREA */}
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-800 bg-[#0a0a0a]">
-          <Truck className="text-red-600 h-8 w-8" />
-          <span className="font-black text-lg tracking-tighter uppercase italic">Simba Dume</span>
+      {/* SIDEBAR - DARK THEME YAKO SAFI */}
+      <aside className="w-64 bg-[#0a0a0a] border-r border-neutral-800/50 flex flex-col text-gray-300">
+        
+        {/* Nembo na Jina: Simba Dume Cargo */}
+        <div className="h-20 flex items-center gap-3 px-6 border-b border-neutral-800/50">
+          <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center">
+            <Truck size={24} className="text-red-600" />
+          </div>
+          <h1 className="text-lg font-black text-white tracking-wide leading-tight">
+            Simba Dume <br/>
+            <span className="text-red-500 text-xs tracking-widest uppercase">Cargo</span>
+          </h1>
         </div>
 
-        {/* MENU ITEMS */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+        {/* Menyu ya Navigation */}
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
+          <p className="px-4 text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-4">Menyu Kuu</p>
+          
           {menuItems.map((item) => {
-            const isActive = pathname.startsWith(item.path) && item.path !== '#';
+            const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+            const Icon = item.icon;
+
             return (
-              <Link 
-                key={item.name} 
+              <Link
+                key={item.name}
                 href={item.path}
-                onClick={() => setIsSidebarOpen(false)}
-                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-900/20' 
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? 'bg-red-600 text-white font-bold shadow-lg shadow-red-600/20'
+                    : 'hover:bg-neutral-800/60 hover:text-white font-medium text-neutral-400'
                 }`}
               >
-                {item.icon}
-                <span className="ml-3 font-semibold">{item.name}</span>
+                <Icon size={20} className={isActive ? 'text-white' : 'text-neutral-500'} />
+                <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* LOGOUT AREA */}
-        <div className="p-4 border-t border-gray-800 bg-[#0a0a0a]">
-          <button className="flex items-center text-gray-400 hover:text-red-500 transition-colors w-full px-4 py-3 rounded-lg hover:bg-gray-800">
-            <LogOut size={20} />
-            <span className="ml-3 font-semibold">Ondoka</span>
+        {/* Kitufe cha Ondoka (Kimeboreshwa) */}
+        <div className="p-4 border-t border-neutral-800/50">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-4 py-3.5 text-neutral-500 font-medium rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors group"
+          >
+            <LogOut size={20} className="group-hover:rotate-12 transition-transform duration-300" />
+            <span>Ondoka Kwenye Mfumo</span>
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        {/* TOP NAVBAR */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 shadow-sm">
-          <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 md:hidden"
-          >
-            <Menu size={24} />
-          </button>
-          
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-gray-900 leading-none">Admin Mkuu</p>
-              <p className="text-[10px] text-gray-500 uppercase mt-1 tracking-widest font-bold">HQ - Dar es Salaam</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-bold shadow-md">
-              SD
-            </div>
-          </div>
-        </header>
+      {/* ENEO LA KAZI (MAIN CONTENT) */}
+      <main className="flex-1 flex flex-col overflow-hidden bg-gray-50 text-gray-900">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+          {children}
+        </div>
+      </main>
 
-        {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
-      </div>
-
-      {/* OVERLAY FOR MOBILE */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }

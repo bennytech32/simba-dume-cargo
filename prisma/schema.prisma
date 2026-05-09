@@ -82,3 +82,16 @@ model Shipment {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
+
+// Ongeza hii kodi mwishoni kabisa mwa faili lako la schema.prisma
+
+model Vehicle {
+  id            String   @id @default(cuid())
+  plateNumber   String   @unique
+  type          String?  // Mfano: Scania, Fuso n.k
+  capacity      String?  // Mfano: Tani 30
+  currentDriver String?  // Jina la dereva wa sasa
+  status        String   @default("AVAILABLE") // AVAILABLE, ON_TRIP, MAINTENANCE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

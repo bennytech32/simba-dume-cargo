@@ -1,126 +1,164 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, Plus, ArrowRight, User, Package } from 'lucide-react';
+import { Truck, User, MapPin, ArrowLeft, Save, Package } from 'lucide-react';
+
+// 👇🏾 HAPA TUMEWEKA NUKTA TATU TU KUENDANA NA ENEO LAKO HALISI
 import prisma from '../../../lib/prisma';
+import { createTrip } from '../../actions/trip'; 
 
 export const dynamic = 'force-dynamic';
 
-export default async function TripsPage() {
-  // Tunavuta Safari Zote na Kuhesabu Mizigo (Shipments) Kwenye Kila Safari
-  const trips = await prisma.trip.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      originBranch: true,
-      destBranch: true,
-      _count: {
-        select: { shipments: true }
-      }
-    }
+export default async function NewTripPage() {
+  // Tunavuta mizigo yote ambayo IMEPOKELEWA tu lakini BADO haijapakiwa kwenye gari lolote
+  const availableShipments = await prisma.shipment.findMany({
+    where: {
+      status: 'RECEIVED',
+      tripId: null, // Haina safari
+    },
+    include: { originBranch: true, destBranch: true },
+    orderBy: { createdAt: 'desc' }
   });
 
   return (
-    <div className="space-y-8">
-      {/* HEADER YA UKURASA */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div className="max-w-5xl mx-auto pb-10">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-            <Truck className="text-red-600" size={28} /> Orodha ya Safari (Manifests)
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <Truck className="text-red-600" size={28} /> Unda Safari Mpya
           </h1>
-          <p className="text-gray-500 font-medium mt-1">Simamia magari yanayosafiri na mizigo iliyopakiwa.</p>
+          <p className="text-gray-500 font-medium mt-1">Sajili gari na upakie mizigo inayosubiri kusafirishwa.</p>
         </div>
-        <Link 
-          href="/trips/new" 
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200"
-        >
-          <Plus size={20} /> Tengeneza Safari Mpya
+        <Link href="/trips" className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors shadow-sm">
+          <ArrowLeft size={18} /> Rudi
         </Link>
       </div>
 
-      {/* JEDWALI LA SAFARI */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-          <h2 className="text-lg font-bold text-gray-900">Magari Yaliyosajiliwa</h2>
-        </div>
+      <form action={createTrip} className="space-y-6">
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[900px]">
-            <thead className="bg-gray-50 text-gray-400 text-[11px] uppercase tracking-widest font-black">
-              <tr>
-                <th className="px-6 py-4">Namba ya Safari</th>
-                <th className="px-6 py-4">Gari & Dereva</th>
-                <th className="px-6 py-4">Njia (Route)</th>
-                <th className="px-6 py-4 text-center">Idadi ya Mizigo</th>
-                <th className="px-6 py-4 text-center">Hali (Status)</th>
-                <th className="px-6 py-4"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {trips.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center text-gray-500 font-medium">
-                    <Truck size={40} className="mx-auto text-gray-300 mb-3" />
-                    Hakuna safari yoyote iliyosajiliwa. <br/> Bonyeza "Tengeneza Safari Mpya" kuanza.
-                  </td>
-                </tr>
-              ) : (
-                trips.map((trip) => (
-                  <tr key={trip.id} className="hover:bg-gray-50/80 transition-colors">
-                    
-                    <td className="px-6 py-4 font-black text-gray-900 text-sm">
-                      {trip.tripNumber}
-                    </td>
-                    
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                        <span className="px-2 py-1 bg-gray-100 rounded border border-gray-200">
-                          {trip.vehiclePlate}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                        <User size={12} /> {trip.driverName}
-                      </div>
-                    </td>
+        {/* TAARIFA ZA GARI NA DEREVA */}
+        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
+            <User className="text-red-600" size={20} /> Taarifa za Usafiri
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Jina la Dereva</label>
+              <input type="text" name="driverName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none" placeholder="Mfano: Juma Shabani" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Namba ya Gari (Plate Number)</label>
+              <input type="text" name="vehiclePlate" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none uppercase font-bold" placeholder="T 123 ABC" />
+            </div>
+          </div>
 
-                    <td className="px-6 py-4 text-xs font-bold text-gray-600">
-                      {trip.originBranch.name} 
-                      <ArrowRight size={12} className="inline mx-2 text-red-500" /> 
-                      {trip.destBranch.name}
-                    </td>
-
-                    <td className="px-6 py-4 text-center">
-                      <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-black">
-                        <Package size={14} /> {trip._count.shipments}
-                      </div>
-                    </td>
-                    
-                    <td className="px-6 py-4 text-center">
-                      <span className={`text-[10px] font-black uppercase tracking-tighter px-3 py-1.5 rounded-full border
-                        ${trip.status === 'SCHEDULED' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
-                        ${trip.status === 'IN_TRANSIT' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : ''}
-                        ${trip.status === 'COMPLETED' ? 'bg-green-100 text-green-700 border-green-200' : ''}
-                      `}>
-                        {trip.status === 'SCHEDULED' && 'Ratiba Mpya'}
-                        {trip.status === 'IN_TRANSIT' && 'Ipo Njiani'}
-                        {trip.status === 'COMPLETED' && 'Imefika'}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4 text-right">
-                      <Link 
-                        href={`/trips/${trip.id}`} 
-                        className="text-xs font-bold text-red-600 hover:text-red-800 hover:underline"
-                      >
-                        Fungua Manifest &rarr;
-                      </Link>
-                    </td>
-
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapotoka</label>
+              <select name="originBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
+                <option value="">-- Chagua Kituo --</option>
+                <option value="Dar es Salaam">Dar es Salaam</option>
+                <option value="Mkata">Mkata</option>
+                <option value="Handeni">Handeni</option>
+                <option value="Mabalanga">Mabalanga</option>
+                <option value="Kwinji">Kwinji</option>
+                <option value="Kwediboma">Kwediboma</option>
+                <option value="Kibirashi">Kibirashi</option>
+                <option value="Mafisa">Mafisa</option>
+                <option value="Songe">Songe</option>
+                <option value="Lengatei">Lengatei</option>
+                <option value="Kijungu">Kijungu</option>
+                <option value="Pori namba 01">Pori namba 01</option>
+                <option value="Kibaya kiteto">Kibaya kiteto</option>
+                <option value="Njoro">Njoro</option>
+                <option value="Mrijo">Mrijo</option>
+                <option value="Mkoka">Mkoka</option>
+                <option value="Dosidosi">Dosidosi</option>
+                <option value="Ngusero">Ngusero</option>
+                <option value="Matui">Matui</option>
+                <option value="Gairo">Gairo</option>
+                <option value="Dumila">Dumila</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapoenda</label>
+              <select name="destinationBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
+                <option value="">-- Chagua Kituo --</option>
+                <option value="Dar es Salaam">Dar es Salaam</option>
+                <option value="Mkata">Mkata</option>
+                <option value="Handeni">Handeni</option>
+                <option value="Mabalanga">Mabalanga</option>
+                <option value="Kwinji">Kwinji</option>
+                <option value="Kwediboma">Kwediboma</option>
+                <option value="Kibirashi">Kibirashi</option>
+                <option value="Mafisa">Mafisa</option>
+                <option value="Songe">Songe</option>
+                <option value="Lengatei">Lengatei</option>
+                <option value="Kijungu">Kijungu</option>
+                <option value="Pori namba 01">Pori namba 01</option>
+                <option value="Kibaya kiteto">Kibaya kiteto</option>
+                <option value="Njoro">Njoro</option>
+                <option value="Mrijo">Mrijo</option>
+                <option value="Mkoka">Mkoka</option>
+                <option value="Dosidosi">Dosidosi</option>
+                <option value="Ngusero">Ngusero</option>
+                <option value="Matui">Matui</option>
+                <option value="Gairo">Gairo</option>
+                <option value="Dumila">Dumila</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </div>
+
+        {/* ORDOHA YA MIZIGO INAYOSUBIRI KUPAKIWA */}
+        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center justify-between border-b border-gray-100 pb-4">
+            <span className="flex items-center gap-2"><Package className="text-red-600" size={20} /> Pakia Mizigo</span>
+            <span className="text-sm font-medium bg-red-100 text-red-700 px-3 py-1 rounded-full">
+              {availableShipments.length} Inasubiri
+            </span>
+          </h2>
+          
+          {availableShipments.length === 0 ? (
+            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+              <Package size={40} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500 font-medium">Hakuna mizigo mipya inayopaswa kusafirishwa kwa sasa.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availableShipments.map((shipment) => (
+                <label key={shipment.id} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-red-400 hover:bg-red-50/30 cursor-pointer transition-colors has-[:checked]:border-red-600 has-[:checked]:bg-red-50">
+                  <div className="mt-1">
+                    <input 
+                      type="checkbox" 
+                      name="shipmentIds" 
+                      value={shipment.id} 
+                      className="w-5 h-5 accent-red-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-black text-gray-900 text-sm">{shipment.trackingNumber}</span>
+                      <span className="text-[10px] font-bold uppercase bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                        {shipment.originBranch.name} ➔ {shipment.destBranch.name}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600"><span className="font-bold">Kutoka:</span> {shipment.senderName}</p>
+                    <p className="text-xs text-gray-600"><span className="font-bold">Mzigo:</span> {shipment.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* KITUFE CHA KUSAVE */}
+        <div className="flex justify-end pt-4">
+          <button type="submit" className="flex items-center gap-2 px-8 py-4 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 transition-all shadow-xl shadow-red-600/30 w-full md:w-auto justify-center text-lg">
+            <Save size={24} /> Hifadhi na Anzisha Safari
+          </button>
+        </div>
+
+      </form>
     </div>
   );
 }

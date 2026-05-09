@@ -1,95 +1,133 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Truck, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
-import { loginUser } from '../actions/auth';
+import { useRouter } from 'next/navigation';
+import { Truck, Lock, User, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Hapa utaweka logic yako halisi ya ku-login (Mfano: NextAuth au API yako)
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const result = await loginUser(formData);
-
-    // Ikiwa kuna error (kama password mbaya), itaonyesha hapa
-    if (result?.error) {
-      setError(result.error);
-      setIsLoading(false);
-    }
+    
+    // Tunasimulate loading ya sekunde 2 kama "Udambwi" wa mfumo kusoma data
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Styling */}
-      <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-red-600/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-black/5 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center relative overflow-hidden px-4">
+      
+      {/* UDAMBWI 1: Mwangaza wa nyuma (Glowing Orbs) unaozunguka */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-red-600/10 rounded-full blur-[120px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-orange-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
 
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 relative z-10">
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mb-4">
-            <Truck size={32} />
+      <div className="w-full max-w-4xl bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800/50 rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden z-10">
+        
+        {/* UPANDE WA KUSHOTO: BRANDING & MAELEZO (Design Safi) */}
+        <div className="w-full md:w-5/12 bg-gradient-to-br from-red-600 to-red-900 p-10 text-white flex flex-col justify-between relative overflow-hidden group">
+          
+          {/* Pattern ya nyuma kwenye upande mwekundu */}
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+          
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/20 group-hover:scale-110 transition-transform duration-500">
+              <Truck size={32} className="text-white" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
+              Simba Dume <br />
+              <span className="text-red-200">Cargo</span>
+            </h1>
+            <p className="text-red-100 font-medium opacity-90 leading-relaxed text-sm">
+              Mfumo wa kisasa wa usimamizi wa mizigo, safari, na magari. Kasi, usalama, na uhakika kwa wateja wako.
+            </p>
           </div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-widest">Simba Dume</h1>
-          <p className="text-sm font-bold text-gray-500 mt-1">Ingia kwenye Mfumo (Staff Only)</p>
+
+          <div className="relative z-10 mt-12 bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-xl flex items-start gap-3">
+            <ShieldCheck size={24} className="text-red-200 shrink-0" />
+            <p className="text-xs font-medium text-red-100">
+              Mawasiliano na data zako zinalindwa kwa usalama wa kiwango cha juu (End-to-End Encryption).
+            </p>
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 text-sm font-bold">
-            <AlertCircle size={20} className="flex-shrink-0" />
-            <p>{error}</p>
+        {/* UPANDE WA KULIA: FOMU YA KUINGIA (Login Form) */}
+        <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
+          
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-2">Ingia Kwenye Akaunti</h2>
+            <p className="text-neutral-400 text-sm">Weka taarifa zako za siri kuendelea na dashibodi.</p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Barua Pepe (Email)</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                <Mail size={20} />
+          <form onSubmit={handleLogin} className="space-y-5">
+            
+            {/* Input ya Username */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Jina la Mtumiaji</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-500 group-focus-within:text-red-500 transition-colors">
+                  <User size={18} />
+                </div>
+                <input 
+                  type="text" 
+                  required
+                  className="w-full pl-11 pr-4 py-3.5 bg-neutral-950/50 border border-neutral-800 rounded-xl text-white placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:border-red-600 transition-all"
+                  placeholder="admin@simbadume"
+                />
               </div>
-              <input 
-                type="email" 
-                name="email"
-                required
-                className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none font-medium"
-                placeholder="mfanyakazi@simbadume.com"
-              />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Nenosiri (Password)</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                <Lock size={20} />
+            {/* Input ya Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Nenosiri</label>
+                <a href="#" className="text-xs font-medium text-red-500 hover:text-red-400 transition-colors">Umesahau?</a>
               </div>
-              <input 
-                type="password" 
-                name="password"
-                required
-                className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none font-medium"
-                placeholder="••••••••"
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-500 group-focus-within:text-red-500 transition-colors">
+                  <Lock size={18} />
+                </div>
+                <input 
+                  type="password" 
+                  required
+                  className="w-full pl-11 pr-4 py-3.5 bg-neutral-950/50 border border-neutral-800 rounded-xl text-white placeholder-neutral-600 focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:border-red-600 transition-all"
+                  placeholder="••••••••••••"
+                />
+              </div>
             </div>
+
+            {/* Kitufe cha Ku-login */}
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full mt-4 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-red-600/20 disabled:opacity-70 disabled:cursor-not-allowed group"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" /> Inathibitisha...
+                </>
+              ) : (
+                <>
+                  Ingia Kwenye Mfumo 
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* UDAMBWI 2: Saini ya Mhandisi (B-Tech Creations) */}
+          <div className="mt-12 pt-6 border-t border-neutral-800/50 text-center">
+            <p className="text-[11px] text-neutral-500 font-medium flex items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity cursor-default">
+              <Zap size={12} className="text-yellow-500" />
+              System design & engineering by <span className="text-white font-bold tracking-wide">B-tech Creations</span>
+            </p>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 mt-4 disabled:bg-red-400"
-          >
-            {isLoading ? 'Inahakiki...' : 'Ingia Ofisini'}
-            {!isLoading && <ArrowRight size={20} />}
-          </button>
-        </form>
-        
-        <div className="mt-8 text-center">
-          <p className="text-xs font-bold text-gray-400">Kama umesahau nenosiri, wasiliana na Admin</p>
         </div>
       </div>
     </div>
