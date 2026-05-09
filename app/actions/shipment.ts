@@ -1,118 +1,71 @@
 "use server";
 
-// Hakikisha njia hii ipo sahihi kulingana na muundo wa mradi wako
-import prisma from '../../lib/prisma'; 
+import prisma from '../../lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
-// ==========================================
-// 1. KUSAJILI MZIGO MPYA (CREATE)
-// ==========================================
 export async function createShipment(formData: FormData) {
-  // Chukua data kutoka kwenye fomu
-  const senderName = formData.get('senderName') as string;
-  const senderPhone = formData.get('senderPhone') as string;
-  const receiverName = formData.get('receiverName') as string;
-  const receiverPhone = formData.get('receiverPhone') as string;
-  const originBranchName = formData.get('originBranchName') as string;
-  const destinationBranchName = formData.get('destinationBranchName') as string;
-  const description = formData.get('description') as string;
-  const weight = formData.get('weight') ? parseFloat(formData.get('weight') as string) : null;
-  const declaredValue = formData.get('declaredValue') ? parseFloat(formData.get('declaredValue') as string) : null;
-  const price = parseFloat(formData.get('price') as string);
-  const paymentStatus = formData.get('paymentStatus') as string;
+  try {
+    // 1. Kusanya data zote kutoka kwenye fomu
+    // Kama tracking number haikuzalishwa na fomu, tunaizalisha hapa
+    const trackingNumber = formData.get('trackingNumber') as string || `SDC-${Math.floor(Math.random() * 100000)}-${Math.floor(Math.random() * 100)}`;
+    const senderName = formData.get('senderName') as string;
+    const senderPhone = formData.get('senderPhone') as string;
+    const receiverName = formData.get('receiverName') as string;
+    const receiverPhone = formData.get('receiverPhone') as string;
+    
+    // Hizi ndizo ID za vituo zilizokuwa zinaleta ubishi
+    const originBranchId = formData.get('originBranchId') as string;
+    const destBranchId = formData.get('destBranchId') as string;
+    
+    const description = formData.get('description') as string;
+    const weight = formData.get('weight') as string;
+    const declaredValue = formData.get('declaredValue') as string;
+    const price = formData.get('price') as string;
+    const paymentStatus = formData.get('paymentStatus') as string || 'PENDING';
 
-  // Tengeneza Namba ya Kipekee ya Kufuatilia Mzigo (Tracking Number)
-  const trackingNumber = `SDC-${Date.now().toString().slice(-5)}-${Math.floor(Math.random() * 100)}`;
-
-  // Tafuta vituo kwenye database (Ili kuunganisha ID zake)
-  const originBranch = await prisma.branch.findFirst({ where: { name: originBranchName } });
-  const destBranch = await prisma.branch.findFirst({ where: { name: destinationBranchName } });
-
-  if (!originBranch || !destBranch) {
-    throw new Error("Kituo ulichochagua hakijasajiliwa kwenye mfumo.");
-  }
-
-  // Ingiza Mzigo Kwenye Database
-  await prisma.shipment.create({
-    data: {
-      trackingNumber,
-      senderName,
-      senderPhone,
-      receiverName,
-      receiverPhone,
-      originBranchId: originBranch.id,
-      destBranchId: destBranch.id,
-      description,
-      weight,
-      declaredValue,
-      price,
-      paymentStatus,
-      status: 'RECEIVED', // Mzigo unaanza na hali ya kupokelewa ofisini
+    // 2. Ulinzi (Validation): Hakikisha vituo vimechaguliwa
+    if (!originBranchId || !destBranchId) {
+      throw new Error("Tafadhali chagua kituo kinapotoka na kinapoenda mzigo.");
     }
-  });
 
-  // Refresh kurasa ili mzigo mpya uonekane papo hapo
-  revalidatePath('/shipments');
-  revalidatePath('/dashboard');
-}
-
-
-// ==========================================
-// 2. KUFUTA MZIGO MMOJA (DELETE)
-// ==========================================
-export async function deleteShipment(formData: FormData) {
-  const id = formData.get('id') as string;
-  
-  if (id) {
-    await prisma.shipment.delete({ 
-      where: { id } 
+    // 3. HIFADHI KWENYE DATABASE (Na lile rekebisho la 'connect') 🔥
+    await prisma.shipment.create({
+      data: {
+        trackingNumber,
+        senderName,
+        senderPhone,
+        receiverName,
+        receiverPhone,
+        description,
+        weight: Number(weight),
+        declaredValue: Number(declaredValue),
+        price: Number(price),
+        paymentStatus,
+        status: "RECEIVED", // Mzigo mpya unaanza na status ya kupokelewa
+        
+        // SULUHISHO LETU LA KI-MHANDISI LIPO HAPA 👇🏾
+        originBranch: {
+          connect: { id: originBranchId }
+        },
+        destBranch: {
+          connect: { id: destBranchId }
+        }
+      }
     });
-    
-    revalidatePath('/shipments');
-    revalidatePath('/dashboard');
+
+  } catch (error) {
+    console.error("Kosa kwenye kusajili mzigo:", error);
+    // Tunatupa Error ili fomu iione na kumjulisha mtumiaji
+    throw new Error("Imeshindikana kusajili mzigo. Hakikisha taarifa zote zimejazwa kwa usahihi.");
   }
-}
 
-
-// ==========================================
-// 3. VITENDO VYA MKUPUO: ANZISHA SAFARI ZOTE
-// ==========================================
-export async function startTodaysTrips() {
-  await prisma.shipment.updateMany({
-    where: { status: 'RECEIVED' }, // Inachukua mizigo yote iliyopokelewa
-    data: { status: 'IN_TRANSIT' } // Inaiweka yote kuwa njiani (Safarini)
-  });
-  
-  revalidatePath('/shipments');
+  // 4. Safisha kumbukumbu za zamani (Cache) ili mzigo mpya uonekane
   revalidatePath('/dashboard');
-}
-
-
-// ==========================================
-// 4. VITENDO VYA MKUPUO: WEKA YOTE IMEFIKA
-// ==========================================
-export async function markAllAsArrived() {
-  await prisma.shipment.updateMany({
-    where: { status: 'IN_TRANSIT' }, // Inachukua mizigo yote iliyokuwa njiani
-    data: { status: 'ARRIVED' }      // Inaiweka yote kuwa imefika
-  });
-  
   revalidatePath('/shipments');
-  revalidatePath('/dashboard');
+  
+  // 5. Mpeleke kwenye ukurasa wa orodha ya mizigo
+  redirect('/shipments');
 }
 
-
-// ==========================================
-// 5. KUBADILISHA HALI YA MZIGO MMOJA MMOJA (Kutoka kwenye StatusSelect)
-// ==========================================
-export async function updateShipmentStatus(id: string, newStatus: string) {
-  if (id && newStatus) {
-    await prisma.shipment.update({
-      where: { id },
-      data: { status: newStatus }
-    });
-    
-    revalidatePath('/shipments');
-    revalidatePath('/dashboard');
-  }
-}
+// Unaweza kuongeza function nyingine hapa chini (kama za kufuta mzigo au kubadili status) baadaye...
