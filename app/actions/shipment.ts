@@ -5,31 +5,35 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function createShipment(formData: FormData) {
-  // 1. Tunatangaza variable nje ya try ili redirect iione baadaye
-  let success = false;
+  let createdId = null;
 
   try {
-    const trackingNumber = formData.get('trackingNumber') as string || `SDC-${Math.floor(Math.random() * 100000)}-${Math.floor(Math.random() * 100)}`;
+    // 1. Kuvuta data (Tunatumia mbinu ya 'fallback' kama majina yanatofautiana)
+    const trackingNumber = formData.get('trackingNumber') as string || `SDC-${Math.floor(Math.random() * 100000)}`;
     const senderName = formData.get('senderName') as string;
     const senderPhone = formData.get('senderPhone') as string;
     const receiverName = formData.get('receiverName') as string;
     const receiverPhone = formData.get('receiverPhone') as string;
-    const originBranchId = formData.get('originBranchId') as string;
-    const destBranchId = formData.get('destBranchId') as string;
-    const description = formData.get('description') as string;
     
-    // Hakikisha namba haziko null (Tunatumia 0 kama ni tupu)
-    const weight = Number(formData.get('weight')) || 0;
-    const declaredValue = Number(formData.get('declaredValue')) || 0;
-    const price = Number(formData.get('price')) || 0;
-    const paymentStatus = formData.get('paymentStatus') as string || 'PENDING';
+    // Tunakagua majina yote mawili yanayoweza kutumika kwenye fomu
+    const originBranchId = (formData.get('originBranchId') || formData.get('origin')) as string;
+    const destBranchId = (formData.get('destBranchId') || formData.get('destination')) as string;
+    
+    const description = formData.get('description') as string;
+    const weight = parseFloat(formData.get('weight') as string) || 0;
+    const declaredValue = parseFloat(formData.get('declaredValue') as string) || 0;
+    const price = parseFloat(formData.get('price') as string) || 0;
+    const paymentStatus = (formData.get('paymentStatus') || 'PENDING') as string;
+
+    // Log hizi data kwa ajili ya kuziona kwenye Vercel Runtime Logs
+    console.log("Data inayotumwa Prisma:", { originBranchId, destBranchId, trackingNumber });
 
     if (!originBranchId || !destBranchId) {
-      throw new Error("Tafadhali chagua vituo.");
+      throw new Error("Vituo havijachaguliwa vizuri.");
     }
 
     // 2. HIFADHI KWENYE DATABASE
-    await prisma.shipment.create({
+    const shipment = await prisma.shipment.create({
       data: {
         trackingNumber,
         senderName,
@@ -37,40 +41,48 @@ export async function createShipment(formData: FormData) {
         receiverName,
         receiverPhone,
         description,
-        weight: weight,
-        declaredValue: declaredValue,
-        price: price,
+        weight,
+        declaredValue,
+        price,
         paymentStatus,
         status: "RECEIVED",
-        originBranch: { connect: { id: originBranchId } },
-        destBranch: { connect: { id: destBranchId } }
+        // Tunalazimisha Prisma ku-connect na Matawi
+        originBranch: {
+          connect: { id: originBranchId }
+        },
+        destBranch: {
+          connect: { id: destBranchId }
+        }
       }
     });
 
-    success = true; //database imekubali!
+    createdId = shipment.id;
 
   } catch (error: any) {
-    console.error("PRISMA ERROR:", error);
-    // Usitupe error hapa ili kuzuia redirect isife, tunarudi hapa chini
+    // Kama kuna kosa la Prisma, litaonekana hapa kwenye Logs
+    console.error("PRISMA CRITICAL ERROR:", error.message);
+    // Haturudishi Error hapa ili tusiue mchakato wa redirect
   }
 
-  // 3. TUNAFANYA REDIRECT NJE YA TRY/CATCH (Hii ni siri ya Next.js)
-  if (success) {
+  // 3. REDIRECT NJE YA TRY/CATCH (Hii ni sheria ya Next.js)
+  if (createdId) {
     revalidatePath('/dashboard');
     revalidatePath('/shipments');
     redirect('/shipments');
   } else {
-    throw new Error("Imeshindikana kusajili mzigo. Hakikisha vituo vimechaguliwa na taarifa zote zimejazwa.");
+    // Hapa ndipo tunatoa ujumbe kama kweli database imegoma
+    throw new Error("Imeshindikana kusajili mzigo. Hakikisha vituo vimesajiliwa na umechagua kila kitu.");
   }
 }
 
 // 4. KUFUTA MZIGO
 export async function deleteShipment(formData: FormData) {
   const id = formData.get('id') as string;
-  if (!id) return;
-  await prisma.shipment.delete({ where: { id } });
-  revalidatePath('/dashboard');
-  revalidatePath('/shipments');
+  if (id) {
+    await prisma.shipment.delete({ where: { id } });
+    revalidatePath('/dashboard');
+    revalidatePath('/shipments');
+  }
 }
 
 // 5. SAFARI ZA LEO
