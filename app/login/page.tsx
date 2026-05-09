@@ -3,39 +3,32 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Truck, Lock, User, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Hapa utaweka logic yako halisi ya ku-login (Mfano: NextAuth au API yako)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Tunasimulate loading ya sekunde 1.5 kama "Udambwi" wa mfumo kusoma data
-    setTimeout(() => {
-      // Tunatumia window.location.href kulazimisha ukurasa kubadilika moja kwa moja
-      window.location.href = '/dashboard';
-    }, 1500);
+    // Tumeondoa 'window.location.href' inayoficha Error.
+    // Hii 'router.push' itatulazimisha kuona ugonjwa uko wapi hasa kwenye Dashibodi
+    router.push('/dashboard');
   };
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center relative overflow-hidden px-4">
       
-      {/* UDAMBWI 1: Mwangaza wa nyuma (Glowing Orbs) unaozunguka */}
+      {/* Mwangaza wa nyuma */}
       <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-red-600/10 rounded-full blur-[120px] animate-pulse"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-orange-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
 
       <div className="w-full max-w-4xl bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800/50 rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden z-10">
         
-        {/* UPANDE WA KUSHOTO: BRANDING & MAELEZO (Design Safi) */}
+        {/* UPANDE WA KUSHOTO */}
         <div className="w-full md:w-5/12 bg-gradient-to-br from-red-600 to-red-900 p-10 text-white flex flex-col justify-between relative overflow-hidden group">
-          
-          {/* Pattern ya nyuma kwenye upande mwekundu */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-          
           <div className="relative z-10">
             <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/20 group-hover:scale-110 transition-transform duration-500">
               <Truck size={32} className="text-white" />
@@ -45,29 +38,25 @@ export default function LoginPage() {
               <span className="text-red-200">Cargo</span>
             </h1>
             <p className="text-red-100 font-medium opacity-90 leading-relaxed text-sm">
-              Mfumo wa kisasa wa usimamizi wa mizigo, safari, na magari. Kasi, usalama, na uhakika kwa wateja wako.
+              Mfumo wa kisasa wa usimamizi wa mizigo, safari, na magari. Kasi, usalama, na uhakika.
             </p>
           </div>
-
           <div className="relative z-10 mt-12 bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-xl flex items-start gap-3">
             <ShieldCheck size={24} className="text-red-200 shrink-0" />
             <p className="text-xs font-medium text-red-100">
-              Mawasiliano na data zako zinalindwa kwa usalama wa kiwango cha juu (End-to-End Encryption).
+              Mawasiliano na data zako zinalindwa kwa usalama wa kiwango cha juu.
             </p>
           </div>
         </div>
 
-        {/* UPANDE WA KULIA: FOMU YA KUINGIA (Login Form) */}
+        {/* UPANDE WA KULIA */}
         <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
-          
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">Ingia Kwenye Akaunti</h2>
             <p className="text-neutral-400 text-sm">Weka taarifa zako za siri kuendelea na dashibodi.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            
-            {/* Input ya Username */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Jina la Mtumiaji</label>
               <div className="relative group">
@@ -83,7 +72,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Input ya Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Nenosiri</label>
@@ -102,7 +90,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Kitufe cha Ku-login */}
             <button 
               type="submit" 
               disabled={isLoading}
@@ -121,14 +108,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* UDAMBWI 2: Saini ya Mhandisi (B-Tech Creations) */}
           <div className="mt-12 pt-6 border-t border-neutral-800/50 text-center">
             <p className="text-[11px] text-neutral-500 font-medium flex items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity cursor-default">
               <Zap size={12} className="text-yellow-500" />
               System design & engineering by <span className="text-white font-bold tracking-wide">B-tech Creations</span>
             </p>
           </div>
-
         </div>
       </div>
     </div>
