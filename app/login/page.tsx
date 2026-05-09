@@ -14,10 +14,11 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Tunasimulate loading ya sekunde 2 kama "Udambwi" wa mfumo kusoma data
+    // Tunasimulate loading ya sekunde 1.5 kama "Udambwi" wa mfumo kusoma data
     setTimeout(() => {
-      router.push('/dashboard');
-    }, 2000);
+      // Tunatumia window.location.href kulazimisha ukurasa kubadilika moja kwa moja
+      window.location.href = '/dashboard';
+    }, 1500);
   };
 
   return (
