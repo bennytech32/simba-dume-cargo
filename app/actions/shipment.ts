@@ -21,7 +21,7 @@ export async function createShipment(formData: FormData) {
     
     const description = formData.get('description') as string;
 
-    // Convert namba kwa usalama (Kuzuia null)
+    // Convert namba kwa usalama (Kuzuia null kwenye Database)
     const weight = parseFloat(formData.get('weight') as string) || 0;
     const declaredValue = parseFloat(formData.get('declaredValue') as string) || 0;
     const price = parseFloat(formData.get('price') as string) || 0;
@@ -32,7 +32,7 @@ export async function createShipment(formData: FormData) {
       throw new Error("Tafadhali chagua vituo vyote (Origin & Destination)");
     }
 
-    // 2. Kuingiza kwenye Database (KUTUMIA CONNECT)
+    // 2. Kuingiza kwenye Database (KUTUMIA CONNECT YA PRISMA)
     await prisma.shipment.create({
       data: {
         trackingNumber,
@@ -45,8 +45,8 @@ export async function createShipment(formData: FormData) {
         declaredValue,
         price,
         paymentStatus,
-        status: "RECEIVED",
-        // Hapa ndipo Prisma inataka 'connect'
+        status: "RECEIVED", // Mzigo unaanza kwa kupokelewa ofisini
+        // Hapa ndipo Prisma inataka 'connect' badala ya ID pekee
         originBranch: {
           connect: { id: originBranchId }
         },
@@ -60,26 +60,26 @@ export async function createShipment(formData: FormData) {
 
   } catch (error: any) {
     console.error("PRISMA_CREATE_ERROR:", error.message);
-    // Tunatupa error ili UI ionyeshe ujumbe kwa mtumiaji
+    // Tunatupa error ili fomu ionyeshe ujumbe endapo itafeli
     throw new Error(error.message || "Imeshindikana kusajili mzigo.");
   }
 
-  // 3. REDIRECT LAZIMA IKAE NJE YA TRY...CATCH
+  // 3. REDIRECT INAKUJA DASHBOARD KUZUIA ERROR YA 404
   if (isSuccess) {
     revalidatePath('/dashboard');
-    revalidatePath('/shipments');
-    redirect('/shipments');
+    redirect('/dashboard'); 
   }
 }
 
-// --- HIZI ACTIONS NYINGINE ZA DASHIBODI ---
+// ==========================================
+// HIZI ACTIONS NYINGINE ZA DASHIBODI
+// ==========================================
 
 export async function deleteShipment(formData: FormData) {
   const id = formData.get('id') as string;
   if (!id) return;
   await prisma.shipment.delete({ where: { id } });
   revalidatePath('/dashboard');
-  revalidatePath('/shipments');
 }
 
 export async function startTodaysTrips() {

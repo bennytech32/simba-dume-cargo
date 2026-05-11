@@ -1,12 +1,11 @@
 import React from 'react';
 import { Package, User, MapPin, DollarSign, Truck, ArrowRight, Save } from 'lucide-react';
-import prisma from '../../../../lib/prisma'; // Hakikisha njia (path) ipo sawa
-import { createShipment } from '../../../../app/actions/shipment'; // Hakikisha njia ipo sawa
+import prisma from '../../../../lib/prisma';
+import { createShipment } from '../../../../app/actions/shipment';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewShipmentPage() {
-  // 1. Vuta matawi yote kutoka kwenye Database ili yajae kwenye Dropdown
   const branches = await prisma.branch.findMany({
     orderBy: { name: 'asc' }
   });
@@ -23,14 +22,11 @@ export default async function NewShipmentPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* FOMU INAANZA HAPA: Tunatumia Action yetu moja kwa moja */}
         <form action={createShipment} className="p-8">
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             
-            {/* --- UPANDE WA KUSHOTO: TAARIFA ZA WATU --- */}
+            {/* UPANDE WA KUSHOTO: WATU */}
             <div className="space-y-8">
-              {/* Mtumaji */}
               <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <User size={16} /> Taarifa za Mtumaji
@@ -49,7 +45,6 @@ export default async function NewShipmentPage() {
 
               <div className="h-px bg-gray-100 w-full"></div>
 
-              {/* Mpokeaji */}
               <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <User size={16} /> Taarifa za Mpokeaji
@@ -67,10 +62,8 @@ export default async function NewShipmentPage() {
               </div>
             </div>
 
-            {/* --- UPANDE WA KULIA: TAARIFA ZA MZIGO NA VITUO --- */}
+            {/* UPANDE WA KULIA: MZIGO & VITUO */}
             <div className="space-y-8">
-              
-              {/* Vituo (Matawi) - HAPA NDIPO TULIPOREKEBISHA THE ERROR 🔥 */}
               <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <MapPin size={16} /> Safari ya Mzigo
@@ -78,7 +71,6 @@ export default async function NewShipmentPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Kituo Kinapotoka *</label>
-                    {/* Hii name="originBranchId" ndio Database ilikuwa inaililia */}
                     <select name="originBranchId" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                       <option value="">-- Chagua Kituo --</option>
                       {branches.map(branch => (
@@ -95,7 +87,6 @@ export default async function NewShipmentPage() {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Kituo Kinapoenda *</label>
-                    {/* Hii name="destBranchId" ndio muhimu pia */}
                     <select name="destBranchId" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                       <option value="">-- Chagua Kituo --</option>
                       {branches.map(branch => (
@@ -108,7 +99,6 @@ export default async function NewShipmentPage() {
 
               <div className="h-px bg-gray-100 w-full"></div>
 
-              {/* Maelezo na Malipo */}
               <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <DollarSign size={16} /> Maelezo & Malipo
@@ -119,13 +109,18 @@ export default async function NewShipmentPage() {
                     <input type="text" name="description" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none" placeholder="Mfano: Maboksi 2 ya nguo" />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* TUMEWEKA SEHEMU TATU HAPA (Uzito, Thamani, Gharama) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">Uzito (KG)</label>
                       <input type="number" name="weight" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none" placeholder="0" />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">Gharama (TSH) *</label>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Thamani (TSH)</label>
+                      <input type="number" name="declaredValue" className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Gharama *</label>
                       <input type="number" name="price" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none" placeholder="10000" />
                     </div>
                   </div>
@@ -143,17 +138,12 @@ export default async function NewShipmentPage() {
             </div>
           </div>
 
-          {/* Kitufe cha Kusubmit */}
           <div className="mt-10 pt-6 border-t border-gray-100 flex justify-end">
-            <button 
-              type="submit" 
-              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-lg shadow-red-200 transition-all flex items-center gap-2 active:scale-95"
-            >
+            <button type="submit" className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-lg shadow-red-200 transition-all flex items-center gap-2 active:scale-95">
               <Save size={20} />
               Kamilisha Usajili wa Mzigo
             </button>
           </div>
-
         </form>
       </div>
     </div>
