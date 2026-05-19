@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -11,12 +11,17 @@ import {
   MapPin, 
   Users, 
   Settings,
-  LogOut 
+  LogOut,
+  Menu, // MPYA KWA AJILI YA SIMU
+  X     // MPYA KWA AJILI YA SIMU
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter(); // Tumeongeza router hapa kwa ajili ya kitufe cha kuondoka
+  const router = useRouter(); 
+  
+  // STATE MPYA YA KUDHIBITI MENU KWENYE SIMU
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Nimeziweka Link (paths) ziendane sawa sawa na majina ya folders zako kwenye VS Code
   const menuItems = [
@@ -41,24 +46,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       
-      {/* SIDEBAR - DARK THEME YAKO SAFI */}
-      <aside className="w-64 bg-[#0a0a0a] border-r border-neutral-800/50 flex flex-col text-gray-300">
+      {/* KIOO CHA GIZA (BACKDROP) KWA AJILI YA SIMU LAKATI MENU IPO WAZI */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR - DARK THEME YAKO SAFI (Imeongezewa Responsive Classes) */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0a0a] border-r border-neutral-800/50 flex flex-col text-gray-300 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         
         {/* Nembo na Jina: Simba Dume Cargo */}
-        <div className="h-20 flex items-center gap-3 px-6 border-b border-neutral-800/50">
-          <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center">
-            <Truck size={24} className="text-red-600" />
+        <div className="h-20 flex items-center justify-between gap-3 px-6 border-b border-neutral-800/50 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center">
+              <Truck size={24} className="text-red-600" />
+            </div>
+            <h1 className="text-lg font-black text-white tracking-wide leading-tight">
+              Simba Dume <br/>
+              <span className="text-red-500 text-xs tracking-widest uppercase">Cargo</span>
+            </h1>
           </div>
-          <h1 className="text-lg font-black text-white tracking-wide leading-tight">
-            Simba Dume <br/>
-            <span className="text-red-500 text-xs tracking-widest uppercase">Cargo</span>
-          </h1>
+          {/* Kitufe cha Kufunga Menu kwenye simu (X) */}
+          <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
 
         {/* Menyu ya Navigation */}
-        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
           <p className="px-4 text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-4">Menyu Kuu</p>
           
           {menuItems.map((item) => {
@@ -69,6 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.name}
                 href={item.path}
+                onClick={() => setIsSidebarOpen(false)} // Inafunga menu ukichagua kurasa (Simu)
                 className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 ${
                   isActive
                     ? 'bg-red-600 text-white font-bold shadow-lg shadow-red-600/20'
@@ -82,8 +102,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Kitufe cha Ondoka (Kimeboreshwa) */}
-        <div className="p-4 border-t border-neutral-800/50">
+        {/* Kitufe cha Ondoka */}
+        <div className="p-4 border-t border-neutral-800/50 shrink-0">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-4 px-4 py-3.5 text-neutral-500 font-medium rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-colors group"
@@ -95,8 +115,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* ENEO LA KAZI (MAIN CONTENT) */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-gray-50 text-gray-900">
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-gray-50 text-gray-900">
+        
+        {/* HEADER YA SIMU (INAONEKANA KWENYE SIMU TU KWA AJILI YA HAMBURGER MENU) */}
+        <header className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 shadow-sm shrink-0 z-30">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-red-600/10 rounded-lg flex items-center justify-center">
+              <Truck size={18} className="text-red-600" />
+            </div>
+            <span className="font-black text-gray-900 tracking-wide">SIMBA DUME</span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <Menu size={24} />
+          </button>
+        </header>
+
+        {/* WATOTO (CHILDREN - DASHBOARD YAKO YENYEWE) */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-10">
           {children}
         </div>
       </main>
