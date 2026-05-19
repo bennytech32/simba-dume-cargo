@@ -1,164 +1,139 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, User, MapPin, ArrowLeft, Save, Package } from 'lucide-react';
-
-// 👇🏾 HAPA TUMEWEKA NUKTA TATU TU KUENDANA NA ENEO LAKO HALISI
+import { Truck, Plus, FileText, Trash2, ArrowRight, Calendar, Users, Edit2 } from 'lucide-react';
 import prisma from '../../../lib/prisma';
-import { createTrip } from '../../actions/trip'; 
+import { deleteTrip } from '../../actions/trip';
+import DeleteTripButton from './DeleteTripButton'; 
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewTripPage() {
-  // Tunavuta mizigo yote ambayo IMEPOKELEWA tu lakini BADO haijapakiwa kwenye gari lolote
-  const availableShipments = await prisma.shipment.findMany({
-    where: {
-      status: 'RECEIVED',
-      tripId: null, // Haina safari
-    },
-    include: { originBranch: true, destBranch: true },
-    orderBy: { createdAt: 'desc' }
+export default async function TripsPage() {
+  // Vuta safari zote zikiambatana na mizigo yake PAMOJA na matawi yake (Relations)
+  const trips = await prisma.trip.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      shipments: true,
+      originBranch: true, // Hakikisha tunavuta data za kituo kinapotoka
+      destBranch: true,   // Hakikisha tunavuta data za kituo kinapoenda
+    }
   });
 
   return (
-    <div className="max-w-5xl mx-auto pb-10">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-7xl mx-auto pb-10 px-4 md:px-0">
+      
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-            <Truck className="text-red-600" size={28} /> Unda Safari Mpya
+            <Truck className="text-red-600" size={28} /> Orodha ya Safari
           </h1>
-          <p className="text-gray-500 font-medium mt-1">Sajili gari na upakie mizigo inayosubiri kusafirishwa.</p>
+          <p className="text-gray-500 font-medium mt-1">Simamia safari za magari, badili hali ya gari kuwa njiani, na tazama manifest.</p>
         </div>
-        <Link href="/trips" className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors shadow-sm">
-          <ArrowLeft size={18} /> Rudi
+        <Link href="/trips/new" className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-200 cursor-pointer">
+          <Plus size={20} /> Unda Safari Mpya
         </Link>
       </div>
 
-      <form action={createTrip} className="space-y-6">
-        
-        {/* TAARIFA ZA GARI NA DEREVA */}
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
-            <User className="text-red-600" size={20} /> Taarifa za Usafiri
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Jina la Dereva</label>
-              <input type="text" name="driverName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none" placeholder="Mfano: Juma Shabani" />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Namba ya Gari (Plate Number)</label>
-              <input type="text" name="vehiclePlate" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none uppercase font-bold" placeholder="T 123 ABC" />
-            </div>
-          </div>
+      {/* TABLE YA SAFARI */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[1050px]">
+            <thead className="bg-gray-900 text-white text-[11px] uppercase tracking-widest font-bold">
+              <tr>
+                <th className="px-6 py-5 whitespace-nowrap">Tarehe</th>
+                <th className="px-6 py-5 whitespace-nowrap">Njia (Route)</th>
+                <th className="px-6 py-5 whitespace-nowrap">Gari & Dereva</th>
+                <th className="px-6 py-5 whitespace-nowrap text-center">Mizigo</th>
+                <th className="px-6 py-5 whitespace-nowrap text-center">Hali (Status)</th>
+                <th className="px-6 py-5 whitespace-nowrap text-right">Vitendo</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {trips.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-16 text-center">
+                    <Truck size={48} className="mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500 font-medium text-lg">Hakuna safari yoyote iliyosajiliwa kwa sasa.</p>
+                  </td>
+                </tr>
+              ) : (
+                trips.map((trip) => (
+                  <tr key={trip.id} className="hover:bg-red-50/30 transition-colors">
+                    
+                    {/* TAREHE */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-gray-600 font-bold text-sm">
+                        <Calendar size={16} className="text-gray-400" />
+                        {new Date(trip.createdAt).toLocaleDateString('sw-TZ', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    </td>
+                    
+                    {/* NJIA (TUMEREKEBISHA KUSOMA KUTOKA KWENYE MAHUSIANO YA BRANCH) */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 font-bold text-gray-800 text-sm uppercase">
+                        {trip.originBranch?.name || "Ofisini"} 
+                        <ArrowRight size={14} className="text-red-500" /> 
+                        {trip.destBranch?.name || "Kituoni"}
+                      </div>
+                    </td>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapotoka</label>
-              <select name="originBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
-                <option value="">-- Chagua Kituo --</option>
-                <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Mkata">Mkata</option>
-                <option value="Handeni">Handeni</option>
-                <option value="Mabalanga">Mabalanga</option>
-                <option value="Kwinji">Kwinji</option>
-                <option value="Kwediboma">Kwediboma</option>
-                <option value="Kibirashi">Kibirashi</option>
-                <option value="Mafisa">Mafisa</option>
-                <option value="Songe">Songe</option>
-                <option value="Lengatei">Lengatei</option>
-                <option value="Kijungu">Kijungu</option>
-                <option value="Pori namba 01">Pori namba 01</option>
-                <option value="Kibaya kiteto">Kibaya kiteto</option>
-                <option value="Njoro">Njoro</option>
-                <option value="Mrijo">Mrijo</option>
-                <option value="Mkoka">Mkoka</option>
-                <option value="Dosidosi">Dosidosi</option>
-                <option value="Ngusero">Ngusero</option>
-                <option value="Matui">Matui</option>
-                <option value="Gairo">Gairo</option>
-                <option value="Dumila">Dumila</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapoenda</label>
-              <select name="destinationBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
-                <option value="">-- Chagua Kituo --</option>
-                <option value="Dar es Salaam">Dar es Salaam</option>
-                <option value="Mkata">Mkata</option>
-                <option value="Handeni">Handeni</option>
-                <option value="Mabalanga">Mabalanga</option>
-                <option value="Kwinji">Kwinji</option>
-                <option value="Kwediboma">Kwediboma</option>
-                <option value="Kibirashi">Kibirashi</option>
-                <option value="Mafisa">Mafisa</option>
-                <option value="Songe">Songe</option>
-                <option value="Lengatei">Lengatei</option>
-                <option value="Kijungu">Kijungu</option>
-                <option value="Pori namba 01">Pori namba 01</option>
-                <option value="Kibaya kiteto">Kibaya kiteto</option>
-                <option value="Njoro">Njoro</option>
-                <option value="Mrijo">Mrijo</option>
-                <option value="Mkoka">Mkoka</option>
-                <option value="Dosidosi">Dosidosi</option>
-                <option value="Ngusero">Ngusero</option>
-                <option value="Matui">Matui</option>
-                <option value="Gairo">Gairo</option>
-                <option value="Dumila">Dumila</option>
-              </select>
-            </div>
-          </div>
-        </div>
+                    {/* GARI NA DEREVA */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-black text-gray-900 text-sm uppercase tracking-wider">{trip.vehiclePlate}</p>
+                      <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-1">
+                        <Users size={12} /> {trip.driverName || 'Dereva wa Gari'}
+                      </p>
+                    </td>
 
-        {/* ORDOHA YA MIZIGO INAYOSUBIRI KUPAKIWA */}
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center justify-between border-b border-gray-100 pb-4">
-            <span className="flex items-center gap-2"><Package className="text-red-600" size={20} /> Pakia Mizigo</span>
-            <span className="text-sm font-medium bg-red-100 text-red-700 px-3 py-1 rounded-full">
-              {availableShipments.length} Inasubiri
-            </span>
-          </h2>
-          
-          {availableShipments.length === 0 ? (
-            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-              <Package size={40} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500 font-medium">Hakuna mizigo mipya inayopaswa kusafirishwa kwa sasa.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {availableShipments.map((shipment) => (
-                <label key={shipment.id} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-red-400 hover:bg-red-50/30 cursor-pointer transition-colors has-[:checked]:border-red-600 has-[:checked]:bg-red-50">
-                  <div className="mt-1">
-                    <input 
-                      type="checkbox" 
-                      name="shipmentIds" 
-                      value={shipment.id} 
-                      className="w-5 h-5 accent-red-600 cursor-pointer"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-black text-gray-900 text-sm">{shipment.trackingNumber}</span>
-                      <span className="text-[10px] font-bold uppercase bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                        {shipment.originBranch.name} ➔ {shipment.destBranch.name}
+                    {/* IDADI YA MIZIGO */}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="bg-gray-100 text-gray-800 font-black px-3 py-1 rounded-lg text-sm">
+                        {trip.shipments.length}
                       </span>
-                    </div>
-                    <p className="text-xs text-gray-600"><span className="font-bold">Kutoka:</span> {shipment.senderName}</p>
-                    <p className="text-xs text-gray-600"><span className="font-bold">Mzigo:</span> {shipment.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+                    </td>
+                    
+                    {/* HALI YA SAFARI (STATUS) */}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider ${
+                        trip.status === 'ARRIVED' ? 'bg-emerald-100 text-emerald-700' :
+                        trip.status === 'IN_TRANSIT' ? 'bg-amber-100 text-amber-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {trip.status === 'ARRIVED' ? 'IMEFIKA' : trip.status === 'IN_TRANSIT' ? 'IPO NJIANI' : 'INASUBIRI'}
+                      </span>
+                    </td>
+                    
+                    {/* VITENDO (MANIFEST, HARIRI, NA DELETE) */}
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        
+                        {/* KITUFE CHA MANIFEST */}
+                        <Link href={`/trips/${trip.id}/manifest`} className="px-3 py-2 bg-gray-100 text-gray-700 hover:text-white hover:bg-gray-900 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer">
+                          <FileText size={15} /> Manifest
+                        </Link>
 
-        {/* KITUFE CHA KUSAVE */}
-        <div className="flex justify-end pt-4">
-          <button type="submit" className="flex items-center gap-2 px-8 py-4 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 transition-all shadow-xl shadow-red-600/30 w-full md:w-auto justify-center text-lg">
-            <Save size={24} /> Hifadhi na Anzisha Safari
-          </button>
-        </div>
+                        {/* KITUFE KIPYA CHA HARIRI (EDIT) 🔥 */}
+                        <Link href={`/trips/${trip.id}/edit`} className="px-3 py-2 bg-white text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-200 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer">
+                          <Edit2 size={15} /> Hariri
+                        </Link>
 
-      </form>
+                        {/* FOMU YA KUFUTA SAFARI (Kitufe kipo salama kama Client Component) */}
+                        <form action={deleteTrip}>
+                          <input type="hidden" name="id" value={trip.id} />
+                          <DeleteTripButton /> 
+                        </form>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   );
 }

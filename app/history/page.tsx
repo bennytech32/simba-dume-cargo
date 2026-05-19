@@ -7,9 +7,11 @@ import { deleteShipment } from '../../app/actions/shipment';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HistoryPage({ searchParams }: { searchParams: { q?: string, date?: string } }) {
-  const searchQuery = searchParams?.q || '';
-  const dateFilter = searchParams?.date || 'all';
+// 1. TUMEIBADILI searchParams KUWA Promise ILI IFANYE KAZI KWENYE NEXT.JS MPYA
+export default async function HistoryPage({ searchParams }: { searchParams: Promise<{ q?: string, date?: string }> }) {
+  const resolvedParams = await searchParams;
+  const searchQuery = resolvedParams?.q || '';
+  const dateFilter = resolvedParams?.date || 'all';
 
   // --- LOGIC YA KUCHUJA TAREHE (DATE FILTER) ---
   let dateCondition: any = undefined;
@@ -49,7 +51,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: { q?
   // Vuta mizigo yote kulingana na Filter
   const allShipments = await prisma.shipment.findMany({
     where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
-    take: 500, // Imelindwa isijaze RAM ya simu
+    // take: 500, <-- TUMEIFUTA LIMIT HAPA ILI ILETE MIZIGO YOTE BILA KUBAKIZA
     orderBy: { createdAt: 'desc' },
     include: { originBranch: true, destBranch: true }
   });
@@ -71,8 +73,8 @@ export default async function HistoryPage({ searchParams }: { searchParams: { q?
           </div>
         </div>
 
-        {/* FOMU YA SEARCH NA FILTER */}
-        <form className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+        {/* FOMU YA SEARCH NA FILTER - Tumeongeza method="GET" 🔥 */}
+        <form method="GET" className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input 
@@ -113,7 +115,6 @@ export default async function HistoryPage({ searchParams }: { searchParams: { q?
               <tr>
                 <th className="px-6 py-5 whitespace-nowrap">Namba & Tarehe</th>
                 <th className="px-6 py-5 whitespace-nowrap">Mtumaji & Mpokeaji</th>
-                {/* COLUMN MPYA YENYE DETAILS WAZIWAZI */}
                 <th className="px-6 py-5 whitespace-nowrap">Maelezo ya Mzigo</th>
                 <th className="px-6 py-5 whitespace-nowrap">Njia & Malipo</th>
                 <th className="px-6 py-5 whitespace-nowrap text-center">Hali (Status)</th>
@@ -154,7 +155,6 @@ export default async function HistoryPage({ searchParams }: { searchParams: { q?
                         </div>
                       </td>
 
-                      {/* DATA WAZIWAZI BILA KU-CLICK RISITI */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-start gap-2">
                           <Package size={16} className="text-red-500 mt-0.5" />
@@ -162,7 +162,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: { q?
                             <p className="text-sm font-bold text-gray-900 w-48 truncate" title={shipment.description || 'Mizigo Kawaida'}>
                               {shipment.description || 'Mizigo Kawaida'}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1 font-medium">Thamani: <span className="text-gray-900">TZS {(shipment as any).cargoValue?.toLocaleString() || 0}</span></p>
+                            <p className="text-xs text-gray-500 mt-1 font-medium">Thamani: <span className="text-gray-900">TZS {(shipment as any).declaredValue?.toLocaleString() || 0}</span></p>
                           </div>
                         </div>
                       </td>
