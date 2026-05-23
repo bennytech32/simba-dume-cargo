@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Package, CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, CheckSquare, Square, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 
 interface ShipmentPickerProps {
   availableShipments: any[];
 }
 
 export default function ShipmentPicker({ availableShipments }: ShipmentPickerProps) {
-  // 1. Kundi la mizigo kwa kila kituo inapoenda (Group by destinationBranch)
+  // Kundi la mizigo kwa kila kituo inapoenda
   const groupedShipments: { [key: string]: any[] } = {};
   
   availableShipments.forEach((shipment) => {
@@ -19,12 +19,9 @@ export default function ShipmentPicker({ availableShipments }: ShipmentPickerPro
     groupedShipments[destName].push(shipment);
   });
 
-  // State ya kushikilia ID zilizochaguliwa
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  // State ya kufungua/kufunga vikundi vya vituo
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
 
-  // Kugeuza chagua/acha (Toggle Single Checkbox)
   const handleToggleSingle = (id: string) => {
     if (selectedIds.includes(id)) {
       setSelectedIds(selectedIds.filter(item => item !== id));
@@ -33,16 +30,13 @@ export default function ShipmentPicker({ availableShipments }: ShipmentPickerPro
     }
   };
 
-  // Kugeuza Chagua Zote za Kituo Hicho (Toggle Select All for a Branch)
   const handleToggleSelectAll = (branchName: string, shipments: any[]) => {
     const branchIds = shipments.map(s => s.id);
     const allAreSelected = branchIds.every(id => selectedIds.includes(id));
 
     if (allAreSelected) {
-      // Kama zote zilichaguliwa, ziondoe zote za kituo hiki tu
       setSelectedIds(selectedIds.filter(id => !branchIds.includes(id)));
     } else {
-      // Kama hazijachaguliwa zote, ziongeze ambazo hazikuwepo
       const newSelections = [...selectedIds];
       branchIds.forEach(id => {
         if (!newSelections.includes(id)) {
@@ -87,7 +81,6 @@ export default function ShipmentPicker({ availableShipments }: ShipmentPickerPro
             const shipments = groupedShipments[branchName];
             const branchIds = shipments.map(s => s.id);
             const allSelected = branchIds.every(id => selectedIds.includes(id));
-            const someSelected = branchIds.some(id => selectedIds.includes(id)) && !allSelected;
             const isOpen = openSections[branchName] !== false; // Default ipo wazi
 
             return (
@@ -127,6 +120,11 @@ export default function ShipmentPicker({ availableShipments }: ShipmentPickerPro
                   <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50/50">
                     {shipments.map((shipment) => {
                       const isChecked = selectedIds.includes(shipment.id);
+                      
+                      // HAPA TUNATENGENEZA TAREHE NA SAA YA MZIGO ULIPOPOKELEWA 🔥
+                      const dateReceived = new Date(shipment.createdAt).toLocaleDateString('sw-TZ', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                      });
 
                       return (
                         <div 
@@ -142,17 +140,25 @@ export default function ShipmentPicker({ availableShipments }: ShipmentPickerPro
                             <input 
                               type="checkbox" 
                               checked={isChecked}
-                              onChange={() => {}} // Inadiliwa kupitia div click
+                              onChange={() => {}} 
                               className="w-5 h-5 accent-red-600 cursor-pointer rounded"
                             />
                           </div>
                           <div className="flex-1">
-                            <div className="flex justify-between items-center mb-1">
+                            <div className="flex justify-between items-start mb-2">
                               <span className="font-black text-gray-900 text-sm">{shipment.trackingNumber}</span>
-                              <span className="text-[10px] font-bold uppercase bg-gray-100 px-2 py-0.5 rounded text-gray-500">
-                                {shipment.originBranch?.name}
-                              </span>
+                              
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-[10px] font-bold uppercase bg-gray-100 px-2 py-0.5 rounded text-gray-500">
+                                  {shipment.originBranch?.name}
+                                </span>
+                                {/* TAREHE INATOKEA HAPA 🔥 */}
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1" title="Tarehe na muda mzigo ulipopokelewa ofisini">
+                                  <Clock size={10} /> {dateReceived}
+                                </span>
+                              </div>
                             </div>
+                            
                             <p className="text-xs text-gray-600 mt-1"><span className="font-bold text-gray-400">Mtumaji:</span> {shipment.senderName}</p>
                             <p className="text-xs text-gray-600"><span className="font-bold text-gray-400">Mpokeaji:</span> {shipment.receiverName}</p>
                             <p className="text-xs text-gray-800 font-bold mt-1 truncate max-w-[250px]" title={shipment.description}>

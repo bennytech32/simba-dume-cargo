@@ -44,7 +44,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
         </p>
       </div>
 
-      {/* RISITI YENYEWE - Nimeweka padding kiasi (p-4 badala ya p-2 iliyokuwa imeibana) */}
+      {/* RISITI YENYEWE */}
       <div className="bg-white p-4 w-[320px] text-black font-mono text-sm border border-gray-300 shadow-xl print:shadow-none print:border-none print:w-full print:max-w-[80mm] print:m-0 print:p-0">
         
         {/* HEADER & MAWASILIANO */}
@@ -58,7 +58,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
         
         <div className="border-t border-dashed border-black my-2"></div>
         
-        {/* TRACKING NUMBER (Imepewa nafasi) */}
+        {/* TRACKING NUMBER */}
         <div className="text-center mb-2 mt-2">
           <p className="text-[10px] uppercase mb-1">Namba ya Mzigo</p>
           <p className="font-black text-xl tracking-widest leading-none">{shipment.trackingNumber}</p>
@@ -66,7 +66,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
         <div className="border-t border-dashed border-black my-2"></div>
 
-        {/* WATEJA - Imewekewa space-y-2 */}
+        {/* WATEJA */}
         <div className="mb-2 mt-2 space-y-2">
           <div className="mb-2">
             <p className="font-bold text-[10px] uppercase underline mb-1">Kutoka (Mtumaji):</p>
@@ -102,23 +102,28 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
         <div className="border-t-[2px] border-black my-2"></div>
 
-        {/* MALIPO - Imebaki Bold na nafasi kiasi */}
+        {/* MALIPO (TUMEWEKA KIINGEREZA NA RANGI) 🔥 */}
         <div className="mb-2 mt-2">
           <div className="flex justify-between items-center font-black text-base leading-tight mb-2">
             <span>JUMLA:</span>
             <span>TZS {Number(shipment.price).toLocaleString()}</span>
           </div>
           
-          <div className="flex justify-between items-center mt-2 leading-tight">
-            <span className="text-[11px] font-bold">HALI:</span>
-            <span className="font-black text-[14px] uppercase tracking-wider">
-              {shipment.paymentStatus === 'PAID' ? 'IMELIPIWA' : 
-               shipment.paymentStatus === 'PAY_ON_DELIVERY' ? 'AKIPOKEA' : 'HAIJALIPIWA'}
+          <div className="flex justify-between items-center mt-3 leading-tight">
+            <span className="text-[11px] font-bold uppercase">Status:</span>
+            <span className={`px-2 py-0.5 rounded font-black text-[13px] uppercase tracking-wider border ${
+              shipment.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700 border-emerald-300 print:bg-transparent print:text-black print:border-black print:border-2' :
+              shipment.paymentStatus === 'PENDING' ? 'bg-red-100 text-red-700 border-red-300 print:bg-transparent print:text-black print:border-black print:border-2' :
+              'bg-amber-100 text-amber-700 border-amber-300 print:bg-transparent print:text-black print:border-black print:border-2'
+            }`}>
+              {shipment.paymentStatus === 'PAID' ? 'PAID' : 
+               shipment.paymentStatus === 'PENDING' ? 'NOT PAID' : 
+               'PAY ON DELIVERY'}
             </span>
           </div>
         </div>
 
-        <div className="border-t-[2px] border-black my-2"></div>
+        <div className="border-t-[2px] border-black my-2 mt-3"></div>
 
         {/* VIGEZO NA MASHARTI */}
         <div className="mt-3 text-[9px] leading-normal text-black text-justify">
@@ -128,17 +133,17 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
           ))}
         </div>
 
-        {/* FOOTER & QR CODE - Zipo Chini Kabisa */}
+        {/* FOOTER & QR CODE */}
         <div className="text-center mt-4 mb-2 space-y-2">
           <p className="font-bold uppercase text-[11px] mb-2">Asante kwa kutuchagua!</p>
           
-          {/* QR CODE - Imepata nafasi na iko chini */}
+          {/* QR CODE */}
           <div className="my-3 flex flex-col items-center justify-center">
             <p className="text-[9px] uppercase font-bold mb-2">Scan kufuatilia mzigo</p>
-            <div className="bg-white p-1">
+            <div className="bg-white p-1 border border-gray-200 print:border-black rounded">
               <QRCode
                 value={trackingUrl}
-                size={90} // Ukubwa wa kati
+                size={90} 
                 level="M" 
               />
             </div>

@@ -3,6 +3,9 @@ import { Package, User, MapPin, DollarSign, Truck, ArrowRight, Save } from 'luci
 import prisma from '../../../../lib/prisma';
 import { createShipment } from '../../../../app/actions/shipment';
 
+// HAPA TUNAVUTA KILE KITUFE CHETU CHA KIJANJA 🔥
+import SubmitShipmentBtn from './SubmitShipmentBtn';
+
 export const dynamic = 'force-dynamic';
 
 export default async function NewShipmentPage() {
@@ -109,7 +112,6 @@ export default async function NewShipmentPage() {
                     <input type="text" name="description" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none" placeholder="Mfano: Maboksi 2 ya nguo" />
                   </div>
                   
-                  {/* TUMEWEKA SEHEMU TATU HAPA (Uzito, Thamani, Gharama) */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1">Uzito (KG)</label>
@@ -139,10 +141,8 @@ export default async function NewShipmentPage() {
           </div>
 
           <div className="mt-10 pt-6 border-t border-gray-100 flex justify-end">
-            <button type="submit" className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-lg shadow-red-200 transition-all flex items-center gap-2 active:scale-95">
-              <Save size={20} />
-              Kamilisha Usajili wa Mzigo
-            </button>
+            {/* KITUFE CHEUTU CHA KIJANJA KINAINGIA HAPA 🔥 */}
+            <SubmitShipmentBtn />
           </div>
         </form>
       </div>
