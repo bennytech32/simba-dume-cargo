@@ -11,7 +11,6 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
   const resolvedParams = await params;
   const tripId = resolvedParams.id;
   
-  // Vuta safari husika pamoja na mizigo yake 
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
     include: {
@@ -28,24 +27,29 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  // MAHSABU (CALCULATIONS) 🔥
+  let actualDriverName = trip.driverName;
+  if (actualDriverName === "Kutoka Kwenye Gari" || !actualDriverName) {
+    const vehicle = await prisma.vehicle.findUnique({ where: { plateNumber: trip.vehiclePlate } });
+    actualDriverName = vehicle?.driverName || "Dereva Haijajulikana";
+  }
+
   const totalShipments = trip.shipments.length;
   const totalWeight = trip.shipments.reduce((sum, item) => sum + Number(item.weight || 0), 0);
   const totalPrice = trip.shipments.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 print:bg-white print:py-0">
+    <div className="min-h-screen bg-gray-100 py-10 print:bg-white print:py-0 px-4 md:px-0">
       
-      {/* VITUFE VYA JUU (Havitaonekana kwenye karatasi ukiprint) */}
+      {/* VITUFE VYA JUU */}
       <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center print:hidden">
         <Link href="/trips" className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 font-bold rounded-lg hover:bg-gray-50 border border-gray-200 transition-colors shadow-sm">
           <ArrowLeft size={18} /> Rudi Kwenye Safari
         </Link>
-        <PrintBtn />
+        <PrintBtn fileName={`${trip.vehiclePlate.replace(/\s+/g, '')}`} />
       </div>
 
-      {/* KARATASI YA MANIFEST (Hii ndiyo itakayoprintiwa) */}
-      <div className="max-w-4xl mx-auto bg-white p-10 border border-gray-300 shadow-xl print:shadow-none print:border-none print:w-full print:max-w-full print:p-0">
+      {/* KARATASI YA MANIFEST */}
+      <div id="manifest-print-area" className="max-w-4xl mx-auto bg-white p-10 border border-gray-300 shadow-xl print:shadow-none print:border-none print:w-full print:max-w-full print:p-0">
         
         {/* Kichwa cha Manifest */}
         <div className="text-center mb-8 border-b-4 border-black pb-6">
@@ -64,8 +68,6 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
           <div className="space-y-3">
             <p className="text-sm font-black text-gray-500 uppercase tracking-wider underline">Taarifa za Gari</p>
             <p className="text-base"><span className="font-bold">Namba ya Gari:</span> <span className="uppercase text-xl font-black border-2 border-black px-3 py-1 ml-2 inline-block">{trip.vehiclePlate}</span></p>
-            
-            {/* TUMEWEKA NAFASI WAZI YA KUJAZA KWA PENI 🔥 */}
             <p className="text-base flex items-end gap-2 mt-2">
               <span className="font-bold">Dereva:</span> 
               <span className="inline-block border-b-2 border-black border-dashed w-56"></span>
@@ -88,11 +90,12 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
             <tr className="bg-gray-100 print:bg-transparent border-y-2 border-black text-[11px] uppercase tracking-wider">
               <th className="p-2 border-r border-black font-black w-8 text-center">#</th>
               <th className="p-2 border-r border-black font-black">Namba</th>
-              <th className="p-2 border-r border-black font-black">Mtumaji</th>
               <th className="p-2 border-r border-black font-black">Mpokeaji</th>
               <th className="p-2 border-r border-black font-black">Unakoenda</th>
               <th className="p-2 border-r border-black font-black">Aina / Maelezo</th>
-              <th className="p-2 border-r border-black font-black text-right">Gharama (TZS)</th>
+              <th className="p-2 border-r border-black font-black text-right">Gharama</th>
+              {/* SAFU MPYA YA MALIPO 🔥 */}
+              <th className="p-2 border-r border-black font-black text-center">Malipo</th>
               <th className="p-2 font-black text-center w-16">Amepokea</th>
             </tr>
           </thead>
@@ -109,12 +112,6 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
                   <td className="p-2 border-r border-gray-400 print:border-black font-bold text-center">{index + 1}</td>
                   <td className="p-2 border-r border-gray-400 print:border-black font-black text-sm">{shipment.trackingNumber}</td>
                   
-                  {/* Mtumaji na Namba Yake */}
-                  <td className="p-2 border-r border-gray-400 print:border-black">
-                    <p className="font-bold uppercase">{shipment.senderName}</p>
-                    <p className="text-[10px]">{shipment.senderPhone}</p>
-                  </td>
-
                   {/* Mpokeaji na Namba Yake */}
                   <td className="p-2 border-r border-gray-400 print:border-black">
                     <p className="font-bold uppercase">{shipment.receiverName}</p>
@@ -134,6 +131,19 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
                   {/* Gharama Iliyochajiwa */}
                   <td className="p-2 border-r border-gray-400 print:border-black text-right font-black text-sm">
                     {Number(shipment.price || 0).toLocaleString()}
+                  </td>
+
+                  {/* HALI YA MALIPO YANAYOELEWEKA (PAID / NOT PAID) 🔥 */}
+                  <td className="p-2 border-r border-gray-400 print:border-black text-center">
+                    <span className={`font-black text-[10px] uppercase tracking-wider ${
+                      shipment.paymentStatus === 'PAID' ? 'text-emerald-600 print:text-black' :
+                      shipment.paymentStatus === 'PENDING' ? 'text-red-600 print:text-black' :
+                      'text-amber-600 print:text-black'
+                    }`}>
+                      {shipment.paymentStatus === 'PAID' ? 'PAID' : 
+                       shipment.paymentStatus === 'PENDING' ? 'NOT PAID' : 
+                       'PAY ON DELIVERY'}
+                    </span>
                   </td>
                   
                   {/* Boksi la Kutiki ✓ (Amepokea) */}

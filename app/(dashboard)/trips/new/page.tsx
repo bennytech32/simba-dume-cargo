@@ -9,26 +9,24 @@ import ShipmentPicker from './ShipmentPicker';
 export const dynamic = 'force-dynamic';
 
 export default async function NewTripPage() {
-  // 1. Vuta mizigo kutoka kwenye database
+  // 1. VUTA MIZIGO YOTE AMBAYO IPO OFISINI NA HAINA GARI 🔥
   const shipmentsDb = await prisma.shipment.findMany({
     where: {
-      status: 'RECEIVED',
-      tripId: null, 
+      tripId: null, // Sharti Kuu: Mzigo lazima uwe haujapakiwa kwenye gari lolote
+      status: {
+        in: ['RECEIVED', 'PENDING'] // Tunaruhusu zote zilizopo ofisini
+      }
     },
     include: { originBranch: true, destBranch: true },
     orderBy: { createdAt: 'desc' }
   });
 
-  // 2. TAFSHIRI YA KUCHUJA DATA (SAFI YA MHANDISI) 🔥
-  // Hapa tunabadilisha Decimal zote kuwa Number za kawaida ili Client Component isilalamike
+  // 2. KUSAFISHA DATA (KUZUIA ERROR ZA DECIMAL)
   const availableShipments = shipmentsDb.map((shipment) => ({
     ...shipment,
     weight: shipment.weight ? Number(shipment.weight) : 0,
     price: shipment.price ? Number(shipment.price) : 0,
-    // Kama unatumia declaredValue au cargoValue, zote tunazigeuza hapa kwa usalama
     declaredValue: (shipment as any).declaredValue ? Number((shipment as any).declaredValue) : 0,
-    cargoValue: (shipment as any).cargoValue ? Number((shipment as any).cargoValue) : 0,
-    // Tunahakikisha tarehe pia zinakaa sawa kama string/ISO
     createdAt: shipment.createdAt.toISOString(),
     updatedAt: shipment.updatedAt.toISOString(),
   }));
