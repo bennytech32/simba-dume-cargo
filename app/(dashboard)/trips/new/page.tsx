@@ -6,16 +6,14 @@ import prisma from '../../../../lib/prisma';
 import { createTrip } from '../../../actions/trip'; 
 import ShipmentPicker from './ShipmentPicker'; 
 
-export const dynamic = 'force-dynamic';
+// LALIMISHA MFUMO USIKARIRI DATA ZA ZAMANI 🔥
+export const revalidate = 0; 
 
 export default async function NewTripPage() {
-  // 1. VUTA MIZIGO YOTE AMBAYO IPO OFISINI NA HAINA GARI 🔥
+  // 1. VUTA MIZIGO YOTE AMBAYO HAINA GARI BILA KUJALI STATUS YAKE 🔥
   const shipmentsDb = await prisma.shipment.findMany({
     where: {
-      tripId: null, // Sharti Kuu: Mzigo lazima uwe haujapakiwa kwenye gari lolote
-      status: {
-        in: ['RECEIVED', 'PENDING'] // Tunaruhusu zote zilizopo ofisini
-      }
+      tripId: null // Sharti pekee lililobaki: Mzigo uwe haupo kwenye gari lingine
     },
     include: { originBranch: true, destBranch: true },
     orderBy: { createdAt: 'desc' }
@@ -66,7 +64,7 @@ export default async function NewTripPage() {
             
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">Chagua Gari (Namba na Dereva) *</label>
-              <select name="vehiclePlate" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white font-bold text-gray-800">
+              <select name="vehiclePlate" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none bg-white font-bold text-gray-800">
                 <option value="">-- Bofya kuchagua Gari --</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.plateNumber}>
@@ -82,7 +80,7 @@ export default async function NewTripPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapotoka *</label>
-              <select name="originBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
+              <select name="originBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                 <option value="">-- Chagua Kituo --</option>
                 {branches.map(branch => (
                   <option key={branch.id} value={branch.name}>{branch.name}</option>
@@ -91,7 +89,7 @@ export default async function NewTripPage() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Kituo Linapoenda *</label>
-              <select name="destinationBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600 outline-none bg-white">
+              <select name="destinationBranchName" required className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 outline-none bg-white">
                 <option value="">-- Chagua Kituo --</option>
                 {branches.map(branch => (
                   <option key={branch.id} value={branch.name}>{branch.name}</option>
