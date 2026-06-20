@@ -5,7 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import PrintBtn from './PrintBtn'; 
 
-export const dynamic = 'force-dynamic';
+// Tunazuia cache ili Manifest isomeke upya kila wakati
+export const revalidate = 0; 
 
 export default async function ManifestPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -33,9 +34,60 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
     actualDriverName = vehicle?.driverName || "Dereva Haijajulikana";
   }
 
-  const totalShipments = trip.shipments.length;
+  // MAHSABU YA JUMLA (CALCULATIONS)
+  const totalShipmentsCount = trip.shipments.length;
   const totalWeight = trip.shipments.reduce((sum, item) => sum + Number(item.weight || 0), 0);
   const totalPrice = trip.shipments.reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+  // ==========================================
+  // ALGORITHM YA KU-GROUP NA KUSORT KIALFABETI 🔥
+  // ==========================================
+  const groupedMap = new Map();
+
+  trip.shipments.forEach(shipment => {
+    // Tunatumia Jina la mpokeaji na Simu kama kitambulisho cha Ku-group
+    const key = `${shipment.receiverName.trim().toUpperCase()}_${shipment.receiverPhone.trim()}`;
+
+    if (!groupedMap.has(key)) {
+      groupedMap.set(key, {
+        id: shipment.id, // Tunatumia ID ya mzigo wa kwanza kama Key ya React
+        receiverName: shipment.receiverName,
+        receiverPhone: shipment.receiverPhone,
+        destBranchName: shipment.destBranch?.name || "N/A",
+        trackingNumbers: [shipment.trackingNumber],
+        descriptions: [shipment.description],
+        totalPrice: Number(shipment.price || 0),
+        statuses: [shipment.paymentStatus],
+        count: 1
+      });
+    } else {
+      const group = groupedMap.get(key);
+      group.trackingNumbers.push(shipment.trackingNumber);
+      group.descriptions.push(shipment.description);
+      group.totalPrice += Number(shipment.price || 0);
+      group.statuses.push(shipment.paymentStatus);
+      group.count += 1;
+    }
+  });
+
+  // Tugeuze Map iwe Array kisha tupange kwa Kialfabeti (A - Z)
+  const groupedShipments = Array.from(groupedMap.values()).sort((a, b) => 
+    a.receiverName.localeCompare(b.receiverName)
+  );
+
+  // Function ndogo ya kujua Status ya Malipo (Hasa kama mtu ana mzigo umelipiwa na ambao haujalipiwa)
+  const getFinalPaymentStatus = (statuses: string[]) => {
+    const allPaid = statuses.every(s => s === 'PAID');
+    const allPending = statuses.every(s => s === 'PENDING');
+    const allPOD = statuses.every(s => s === 'PAY_ON_DELIVERY');
+
+    if (allPaid) return { text: 'PAID', color: 'text-emerald-600 print:text-black' };
+    if (allPending) return { text: 'NOT PAID', color: 'text-red-600 print:text-black' };
+    if (allPOD) return { text: 'PAY ON DELIVERY', color: 'text-amber-600 print:text-black' };
+    
+    // Kama kalipia baadhi na kudaiwa baadhi
+    return { text: 'MIXED (KUNA DENI)', color: 'text-red-600 print:text-black font-black underline' };
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 print:bg-white print:py-0 px-4 md:px-0">
@@ -77,81 +129,88 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
 
         {/* MUHTASARI */}
         <div className="flex justify-between items-center bg-gray-100 print:bg-transparent print:border-y-2 print:border-black p-4 rounded-lg mb-6 border border-gray-200">
-          <p className="font-black text-lg">Mizigo: <span className="text-2xl">{totalShipments}</span></p>
+          <p className="font-black text-lg">Mizigo Yote: <span className="text-2xl">{totalShipmentsCount}</span></p>
           {totalWeight > 0 && <p className="font-black text-lg">Uzito: <span className="text-2xl">{totalWeight} Kg</span></p>}
           <p className="font-black text-lg text-black">
             Jumla ya Gharama: <span className="text-2xl ml-2">TZS {totalPrice.toLocaleString()}</span>
           </p>
         </div>
 
-        {/* JEDWALI LA ORODHA YA MIZIGO */}
+        {/* JEDWALI LA ORODHA YA MIZIGO (ILIYOPANGWA KIALFABETI NA KUGROUPIWA) */}
         <table className="w-full text-left border-collapse mb-10 text-black">
           <thead>
             <tr className="bg-gray-100 print:bg-transparent border-y-2 border-black text-[11px] uppercase tracking-wider">
               <th className="p-2 border-r border-black font-black w-8 text-center">#</th>
-              <th className="p-2 border-r border-black font-black">Namba</th>
+              <th className="p-2 border-r border-black font-black">Namba (Tracking)</th>
               <th className="p-2 border-r border-black font-black">Mpokeaji</th>
               <th className="p-2 border-r border-black font-black">Unakoenda</th>
               <th className="p-2 border-r border-black font-black">Aina / Maelezo</th>
               <th className="p-2 border-r border-black font-black text-right">Gharama</th>
-              {/* SAFU MPYA YA MALIPO 🔥 */}
               <th className="p-2 border-r border-black font-black text-center">Malipo</th>
               <th className="p-2 font-black text-center w-16">Amepokea</th>
             </tr>
           </thead>
           <tbody>
-            {trip.shipments.length === 0 ? (
+            {groupedShipments.length === 0 ? (
               <tr>
                 <td colSpan={8} className="p-8 text-center text-gray-500 font-bold border-b border-black">
                   Hakuna mizigo iliyopakiwa kwenye gari hili.
                 </td>
               </tr>
             ) : (
-              trip.shipments.map((shipment, index) => (
-                <tr key={shipment.id} className="text-xs border-b border-gray-400 print:border-black">
-                  <td className="p-2 border-r border-gray-400 print:border-black font-bold text-center">{index + 1}</td>
-                  <td className="p-2 border-r border-gray-400 print:border-black font-black text-sm">{shipment.trackingNumber}</td>
-                  
-                  {/* Mpokeaji na Namba Yake */}
-                  <td className="p-2 border-r border-gray-400 print:border-black">
-                    <p className="font-bold uppercase">{shipment.receiverName}</p>
-                    <p className="text-[10px]">{shipment.receiverPhone}</p>
-                  </td>
-                  
-                  {/* Kituo Unakoenda Mzigo */}
-                  <td className="p-2 border-r border-gray-400 print:border-black uppercase font-bold">
-                    {shipment.destBranch?.name || "N/A"}
-                  </td>
-                  
-                  {/* Aina / Maelezo */}
-                  <td className="p-2 border-r border-gray-400 print:border-black uppercase font-bold">
-                    {shipment.description}
-                  </td>
-                  
-                  {/* Gharama Iliyochajiwa */}
-                  <td className="p-2 border-r border-gray-400 print:border-black text-right font-black text-sm">
-                    {Number(shipment.price || 0).toLocaleString()}
-                  </td>
+              groupedShipments.map((group, index) => {
+                const finalStatus = getFinalPaymentStatus(group.statuses);
 
-                  {/* HALI YA MALIPO YANAYOELEWEKA (PAID / NOT PAID) 🔥 */}
-                  <td className="p-2 border-r border-gray-400 print:border-black text-center">
-                    <span className={`font-black text-[10px] uppercase tracking-wider ${
-                      shipment.paymentStatus === 'PAID' ? 'text-emerald-600 print:text-black' :
-                      shipment.paymentStatus === 'PENDING' ? 'text-red-600 print:text-black' :
-                      'text-amber-600 print:text-black'
-                    }`}>
-                      {shipment.paymentStatus === 'PAID' ? 'PAID' : 
-                       shipment.paymentStatus === 'PENDING' ? 'NOT PAID' : 
-                       'PAY ON DELIVERY'}
-                    </span>
-                  </td>
-                  
-                  {/* Boksi la Kutiki ✓ (Amepokea) */}
-                  <td className="p-2 text-center align-middle">
-                    <div className="w-5 h-5 border-2 border-black mx-auto print:border-black"></div>
-                  </td>
-                </tr>
-              ))
+                return (
+                  <tr key={group.id} className="text-xs border-b border-gray-400 print:border-black">
+                    <td className="p-2 border-r border-gray-400 print:border-black font-bold text-center">{index + 1}</td>
+                    
+                    {/* NAMBA ZA MIZIGO YOTE YA HUYU MTU */}
+                    <td className="p-2 border-r border-gray-400 print:border-black font-black text-[10px] leading-relaxed">
+                      {group.trackingNumbers.join(', ')}
+                    </td>
+                    
+                    {/* MPOKEAJI PAMOJA NA IDADI YA MIZIGO YAKE KAMA NI ZAIDI YA MMOJA 🔥 */}
+                    <td className="p-2 border-r border-gray-400 print:border-black">
+                      <p className="font-bold uppercase text-[13px]">
+                        {group.receiverName} 
+                        {group.count > 1 && (
+                          <span className="ml-1 text-[9px] bg-black text-white px-1.5 py-0.5 rounded-full print:border print:border-black print:bg-transparent print:text-black">
+                            ({group.count})
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[10px]">{group.receiverPhone}</p>
+                    </td>
+                    
+                    <td className="p-2 border-r border-gray-400 print:border-black uppercase font-bold">
+                      {group.destBranchName}
+                    </td>
+                    
+                    {/* MAELEZO YOTE YAMEUNGANISHWA */}
+                    <td className="p-2 border-r border-gray-400 print:border-black uppercase text-[10px]">
+                      {group.descriptions.join(' + ')}
+                    </td>
+                    
+                    {/* GHARAMA YA JUMLA YA MIZIGO YAKE */}
+                    <td className="p-2 border-r border-gray-400 print:border-black text-right font-black text-sm">
+                      {group.totalPrice.toLocaleString()}
+                    </td>
+
+                    {/* HALI YA MALIPO YANAYOELEWEKA (PAID / NOT PAID / MIXED) */}
+                    <td className={`p-2 border-r border-gray-400 print:border-black text-center ${finalStatus.color}`}>
+                      <span className="font-black text-[10px] uppercase tracking-wider">
+                        {finalStatus.text}
+                      </span>
+                    </td>
+                    
+                    {/* Boksi la Kutiki ✓ */}
+                    <td className="p-2 text-center align-middle">
+                      <div className="w-5 h-5 border-2 border-black mx-auto print:border-black"></div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
