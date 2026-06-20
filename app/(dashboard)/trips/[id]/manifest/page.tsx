@@ -1,7 +1,7 @@
 import React from 'react';
 import prisma from '../../../../../lib/prisma';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
 import PrintBtn from './PrintBtn'; 
 
@@ -78,12 +78,11 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
   // Function ndogo ya kujua Status ya Malipo (Hasa kama mtu ana mzigo umelipiwa na ambao haujalipiwa)
   const getFinalPaymentStatus = (statuses: string[]) => {
     const allPaid = statuses.every(s => s === 'PAID');
-    const allPending = statuses.every(s => s === 'PENDING');
-    const allPOD = statuses.every(s => s === 'PAY_ON_DELIVERY');
+    // Kama hajalipia yote (Iwe PENDING au PAY_ON_DELIVERY yote inasomeka NOT PAID)
+    const allNotPaid = statuses.every(s => s !== 'PAID');
 
     if (allPaid) return { text: 'PAID', color: 'text-emerald-600 print:text-black' };
-    if (allPending) return { text: 'NOT PAID', color: 'text-red-600 print:text-black' };
-    if (allPOD) return { text: 'PAY ON DELIVERY', color: 'text-amber-600 print:text-black' };
+    if (allNotPaid) return { text: 'NOT PAID', color: 'text-red-600 print:text-black' };
     
     // Kama kalipia baadhi na kudaiwa baadhi
     return { text: 'MIXED (KUNA DENI)', color: 'text-red-600 print:text-black font-black underline' };
@@ -94,9 +93,17 @@ export default async function ManifestPage({ params }: { params: Promise<{ id: s
       
       {/* VITUFE VYA JUU */}
       <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center print:hidden">
-        <Link href="/trips" className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 font-bold rounded-lg hover:bg-gray-50 border border-gray-200 transition-colors shadow-sm">
-          <ArrowLeft size={18} /> Rudi Kwenye Safari
-        </Link>
+        <div className="flex gap-3 items-center">
+          <Link href="/trips" className="flex items-center gap-2 px-4 py-2 bg-white text-gray-600 font-bold rounded-lg hover:bg-gray-50 border border-gray-200 transition-colors shadow-sm">
+            <ArrowLeft size={18} /> Rudi
+          </Link>
+          
+          {/* KITUFE KIPYA CHA KUONGEZA MZIGO / KUEDIT SAFARI 🔥 */}
+          <Link href={`/trips/${tripId}/edit`} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+            <Edit size={18} /> Ongeza Mzigo
+          </Link>
+        </div>
+
         <PrintBtn fileName={`${trip.vehiclePlate.replace(/\s+/g, '')}`} />
       </div>
 
