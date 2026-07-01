@@ -13,29 +13,53 @@ export default function PrintBtn({ fileName = "Safari" }: PrintBtnProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPDF = async () => {
-    // Tunatafuta lile eneo lenye kitambulisho cha 'manifest-print-area'
     const element = document.getElementById('manifest-print-area');
     if (!element) return;
 
     try {
       setIsDownloading(true);
       
-      // html2canvas inapiga "Screenshot" ya ubora wa juu ya Manifest
       const canvas = await html2canvas(element, {
-        scale: 2, // Hii inaongeza ubora (High Quality)
+        scale: 2, 
         useCORS: true,
-        logging: false
+        logging: false,
+        // HII NDIO SIRI: Inalazimisha picha ipigwe kama kioo cha Computer (1024px) hata ukiwa kwenye Simu! 🔥
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById('manifest-print-area');
+          if (el) {
+            el.style.width = '1024px';
+            el.style.maxWidth = '1024px';
+            el.style.margin = '0 auto';
+            el.style.padding = '40px'; // Inaongeza hewa isibane ukingoni
+          }
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4'); // Karatasi ya A4
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // Upana wa A4 (210mm)
+      const pageHeight = pdf.internal.pageSize.getHeight(); // Urefu wa A4 (297mm)
+      
+      // Tunatafuta urefu wa picha yote ukilinganishwa na upana wa karatasi
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      // WEKA UKURASA WA KWANZA
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      // KAMA JEDWALI NI REFU SANA, TUNAONGEZA KURASA MPYA AUTOMATICALLY (PAGE 2, PAGE 3...) 🔥
+      while (heightLeft > 0) {
+        position = position - pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
       
-      // Inashusha faili lenye jina la Gari na Tarehe (Mfn: Manifest_T123ABC.pdf)
+      // Inashusha faili lenye jina la Gari
       pdf.save(`Manifest_${fileName}.pdf`);
 
     } catch (error) {
@@ -56,7 +80,7 @@ export default function PrintBtn({ fileName = "Safari" }: PrintBtnProps) {
         <Printer size={18} /> Chapisha
       </button>
 
-      {/* KITUFE KIPYA CHA 1-CLICK PDF DOWNLOAD 🔥 */}
+      {/* KITUFE CHA 1-CLICK PDF DOWNLOAD */}
       <button 
         onClick={handleDownloadPDF} 
         disabled={isDownloading}
