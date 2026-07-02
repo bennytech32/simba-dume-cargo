@@ -1,6 +1,5 @@
 "use server";
 
-// Tumerekebisha Njia (Path) ya kuvuta Prisma 🔥
 import prisma from '../../lib/prisma'; 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -15,7 +14,6 @@ export async function createTrip(formData: FormData) {
   const destinationBranchName = formData.get('destinationBranchName') as string;
   const shipmentIds = formData.getAll('shipmentIds') as string[];
 
-  // Tafuta vituo ili kupata ID zake
   const originBranch = await prisma.branch.findFirst({ where: { name: originBranchName } });
   const destBranch = await prisma.branch.findFirst({ where: { name: destinationBranchName } });
 
@@ -23,33 +21,30 @@ export async function createTrip(formData: FormData) {
     throw new Error("Kituo hakijapatikana. Tafadhali hakikisha vituo vimesajiliwa vizuri.");
   }
 
-  // Tengeneza Namba ya Safari (Mfano: TRP-162834)
   const tripNumber = `TRP-${Math.floor(100000 + Math.random() * 900000)}`;
 
-  // Unda Safari (Trip)
   const newTrip = await prisma.trip.create({
     data: {
       tripNumber,
       vehiclePlate,
       driverName,
-      originBranchId: originBranch.id,
-      destBranchId: destBranch.id,
       originBranchName: originBranch.name,
       destinationBranchName: destBranch.name,
       status: 'IN_TRANSIT',
+      // 🔥 HAPA NDIO TUMETIBU TATIZO LA PRISMA 🔥
+      originBranch: { connect: { id: originBranch.id } },
+      destBranch: { connect: { id: destBranch.id } },
       shipments: {
         connect: shipmentIds.map((id) => ({ id }))
       }
     }
   });
 
-  // Badilisha Hali ya Gari kuwa Lipo Njiani (IN_TRANSIT)
   await prisma.vehicle.update({
     where: { plateNumber: vehiclePlate },
     data: { status: 'IN_TRANSIT' } 
   });
 
-  // Badilisha Hali ya Mizigo yote iliyopakiwa kuwa 'IPO NJIANI'
   if (shipmentIds.length > 0) {
     await prisma.shipment.updateMany({
       where: { id: { in: shipmentIds } },
@@ -86,11 +81,12 @@ export async function updateTrip(formData: FormData) {
     data: {
       vehiclePlate,
       driverName,
-      originBranchId: originBranch.id,
-      destBranchId: destBranch.id,
       originBranchName: originBranch.name,
       destinationBranchName: destBranch.name,
       status,
+      // 🔥 HAPA PIA TUMETIBU TATIZO LA PRISMA 🔥
+      originBranch: { connect: { id: originBranch.id } },
+      destBranch: { connect: { id: destBranch.id } },
       shipments: {
         set: shipmentIds.map((id) => ({ id })) 
       }
@@ -131,7 +127,6 @@ export async function updateTrip(formData: FormData) {
     }
   }
 
-  // Rudisha mzigo uliotolewa garini stoo
   await prisma.shipment.updateMany({
     where: { 
       tripId: null, 
@@ -145,25 +140,22 @@ export async function updateTrip(formData: FormData) {
 }
 
 // ============================================================================
-// 3. KUFUTA SAFARI (DELETE TRIP) 🔥 - Hii ndio iliyokuwa inatafutwa na Vercel!
+// 3. KUFUTA SAFARI (DELETE TRIP)
 // ============================================================================
 export async function deleteTrip(formData: FormData) {
   const tripId = formData.get('id') as string;
 
-  // Vuta safari ili tujue gari na mizigo yake
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
     include: { shipments: true }
   });
 
   if (trip) {
-    // 1. Achia gari liwe huru (AVAILABLE)
     await prisma.vehicle.update({
       where: { plateNumber: trip.vehiclePlate },
       data: { status: 'AVAILABLE' }
     });
 
-    // 2. Rudisha mizigo yote stoo (PENDING)
     const shipmentIds = trip.shipments.map(s => s.id);
     if (shipmentIds.length > 0) {
       await prisma.shipment.updateMany({
@@ -172,7 +164,6 @@ export async function deleteTrip(formData: FormData) {
       });
     }
 
-    // 3. Futa safari yenyewe
     await prisma.trip.delete({
       where: { id: tripId }
     });
