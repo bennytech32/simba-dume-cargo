@@ -28,10 +28,8 @@ export async function createTrip(formData: FormData) {
       tripNumber,
       vehiclePlate,
       driverName,
-      originBranchName: originBranch.name,
-      destinationBranchName: destBranch.name,
       status: 'IN_TRANSIT',
-      // 🔥 HAPA NDIO TUMETIBU TATIZO LA PRISMA 🔥
+      // TUMETOAA YALE MAJINA YALIYOKUWA YANALETA SHIDA, TUMEBAKIZA CONNECT TU 🔥
       originBranch: { connect: { id: originBranch.id } },
       destBranch: { connect: { id: destBranch.id } },
       shipments: {
@@ -81,10 +79,8 @@ export async function updateTrip(formData: FormData) {
     data: {
       vehiclePlate,
       driverName,
-      originBranchName: originBranch.name,
-      destinationBranchName: destBranch.name,
       status,
-      // 🔥 HAPA PIA TUMETIBU TATIZO LA PRISMA 🔥
+      // HAPA PIA TUMEBAKIZA CONNECT TU 🔥
       originBranch: { connect: { id: originBranch.id } },
       destBranch: { connect: { id: destBranch.id } },
       shipments: {
